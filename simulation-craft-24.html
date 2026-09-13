@@ -1,0 +1,1417 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Forge +24 — Simulateur</title>
+
+  <style>
+    :root {
+      --bg: #120b08;
+      --panel: #1b1714;
+      --panel2: #241d18;
+      --stone: #302922;
+      --stone2: #171311;
+      --gold: #d6a84a;
+      --gold2: #f0cf75;
+      --bronze: #8e5b2f;
+      --bronze2: #c17a38;
+      --ember: #e64b20;
+      --red: #9d2717;
+      --cream: #eee0bd;
+      --muted: #a99578;
+      --line: #5d4630;
+      --green: #59c68a;
+      --danger: #e05a43;
+      --shadow: rgba(0, 0, 0, .72);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: #090706;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--cream);
+      font-family: Georgia, "Times New Roman", serif;
+      background: #0c0807;
+      overflow-x: hidden;
+      isolation: isolate;
+    }
+
+    .background {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+      z-index: -2;
+      pointer-events: none;
+      filter: saturate(.92) contrast(1.08) brightness(.72);
+    }
+
+    .background-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 32%, rgba(255, 95, 28, .16), transparent 32%),
+        linear-gradient(180deg, rgba(0, 0, 0, .42), rgba(7, 4, 3, .82) 78%, rgba(5, 3, 2, .96)),
+        linear-gradient(90deg, rgba(0, 0, 0, .52), transparent 28%, transparent 72%, rgba(0, 0, 0, .52));
+    }
+
+    body:has(.card:hover) .background {
+      filter: saturate(1) contrast(1.08) brightness(.76);
+    }
+
+    .container {
+      width: min(1180px, 94vw);
+      margin: auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 42px 0 28px;
+      text-shadow: 0 3px 12px #000;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 13px;
+      border: 1px solid #9c6b38;
+      border-radius: 3px;
+      background: linear-gradient(180deg, #342419dd, #120c09e8);
+      color: #d5b77d;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+      box-shadow: inset 0 1px #ffffff18, 0 5px 18px #0008;
+    }
+
+    h1 {
+      margin: 13px 0 5px;
+      color: #f1d48b;
+      font-size: clamp(40px, 6vw, 70px);
+      line-height: .95;
+      letter-spacing: .015em;
+      text-transform: uppercase;
+      text-shadow:
+        0 2px 0 #5e3a18,
+        0 4px 0 #21120b,
+        0 0 22px #ff6a2724,
+        0 5px 18px #000;
+    }
+
+    .sub {
+      margin: 0;
+      color: #d0b98e;
+      font-size: 17px;
+      letter-spacing: .03em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 18px;
+    }
+
+    .card {
+      position: relative;
+      padding: 24px;
+      border: 1px solid #7b522f;
+      border-radius: 6px;
+      background:
+        linear-gradient(180deg, rgba(53, 39, 29, .96), rgba(20, 15, 12, .97)),
+        radial-gradient(circle at 50% 0, #a06b3218, transparent 60%);
+      box-shadow:
+        inset 0 1px #e4bd7817,
+        inset 0 0 0 1px #0008,
+        0 18px 48px #000b;
+    }
+
+    .card:before {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border: 1px solid #d29a5218;
+      pointer-events: none;
+    }
+
+    .card:after {
+      content: "";
+      position: absolute;
+      top: -1px;
+      left: 20px;
+      right: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #e2b76888, transparent);
+      pointer-events: none;
+    }
+
+    .item {
+      height: 310px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #6e4726;
+      border-radius: 4px;
+      background:
+        radial-gradient(circle at 50% 48%, rgba(255, 101, 25, .18), transparent 18%),
+        radial-gradient(circle at 50% 50%, rgba(16, 155, 187, .10), transparent 31%),
+        linear-gradient(145deg, #0e0c0a, #272019 48%, #0c0908);
+      box-shadow:
+        inset 0 0 0 1px #d8a04c1c,
+        inset 0 0 55px #000,
+        0 10px 30px #0009;
+    }
+
+    .item:before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border: 1px solid #b17b3c55;
+      border-radius: 2px;
+      box-shadow: inset 0 0 25px #000b;
+    }
+
+    .item:after {
+      content: "";
+      position: absolute;
+      width: 310px;
+      height: 310px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ff7b2515 0%, #ff4d0707 30%, transparent 67%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse 2.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: .58;
+        transform: translate(-50%, -50%) scale(1.08);
+      }
+    }
+
+    .itemname {
+      z-index: 2;
+      color: #9d8564;
+      text-transform: uppercase;
+      letter-spacing: .25em;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .level {
+      z-index: 2;
+      margin: 8px 0 2px;
+      color: #f0ce7a;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 105px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: .02em;
+      text-shadow:
+        0 2px 0 #704718,
+        0 5px 0 #25160b,
+        0 0 26px #f08c2b55;
+    }
+
+    .goal {
+      z-index: 2;
+      color: #c2aa80;
+      font-size: 14px;
+      letter-spacing: .08em;
+    }
+
+    .chance {
+      margin: 14px 0;
+      padding: 13px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #79522f;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #30251ce8, #17110ee8);
+      box-shadow: inset 0 1px #fff1;
+    }
+
+    .chance .muted {
+      color: #bca37b;
+    }
+
+    .chance strong {
+      color: #f3c95e;
+      font-size: 29px;
+      text-shadow: 0 0 12px #e49d2b44;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid #84542d;
+      border-radius: 4px;
+      padding: 13px 15px;
+      color: #f1dfb9;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 700;
+      letter-spacing: .02em;
+      cursor: pointer;
+      transition: .16s ease;
+      box-shadow: inset 0 1px #fff2, 0 5px 14px #0007;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.12);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: .38;
+      cursor: not-allowed;
+      filter: none;
+      transform: none;
+    }
+
+    .primary {
+      background: linear-gradient(180deg, #a84a20, #702010);
+      border-color: #c77b3c;
+      box-shadow: inset 0 1px #f5c27b55, 0 0 0 1px #3b160d, 0 7px 18px #0009;
+    }
+
+    .secondary {
+      background: linear-gradient(180deg, #4a3b2e, #2b2119);
+    }
+
+    .dark {
+      background: linear-gradient(180deg, #27201b, #0f0c0a);
+    }
+
+    .full {
+      width: 100%;
+      margin-top: 9px;
+    }
+
+    .message {
+      margin-top: 14px;
+      min-height: 46px;
+      padding: 13px 14px;
+      border: 1px solid #62462f;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #261d17dd, #120d0bdf);
+      color: #cdb78e;
+      line-height: 1.45;
+      box-shadow: inset 0 1px #fff1;
+    }
+
+    .stats,
+    .bigstats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 9px;
+      margin-top: 13px;
+    }
+
+    .stat,
+    .big {
+      min-height: 78px;
+      padding: 13px;
+      border: 1px solid #55402c;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #30251de8, #18120fe8);
+      box-shadow: inset 0 1px #fff1;
+    }
+
+    .stat small,
+    .big span {
+      display: block;
+      margin-bottom: 5px;
+      color: #998368;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+
+    .stat b,
+    .big strong {
+      color: #e2c37d;
+      font-size: 20px;
+      letter-spacing: .01em;
+    }
+
+    h2 {
+      margin: 0 0 6px;
+      color: #e5c67e;
+      font-size: 29px;
+      letter-spacing: .025em;
+      text-transform: uppercase;
+      text-shadow: 0 2px 6px #000;
+    }
+
+    .desc {
+      color: #a99170;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .cost {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 9px;
+      padding: 11px 12px;
+      border: 1px solid #58422e;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #2d241de8, #17110ee8);
+    }
+
+    .costleft {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #d0b88b;
+      font-weight: 700;
+    }
+
+    .cost b {
+      color: #e2c37c;
+    }
+
+    .coin {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 2px solid #5b3c1c;
+      font-size: 17px;
+      box-shadow: inset 0 0 0 1px #fff4, 0 4px 10px #0009;
+    }
+
+    .silver {
+      background: radial-gradient(circle at 32% 28%, #f2f3ee, #858b86 62%, #353a36);
+      color: #303430;
+    }
+
+    .gold {
+      background: radial-gradient(circle at 32% 28%, #ffe89a, #c48a22 64%, #69430b);
+      color: #6b4307;
+    }
+
+    .rules {
+      margin-top: 12px;
+      padding: 14px;
+      border: 1px solid #6d4c2e;
+      border-radius: 4px;
+      background:
+        linear-gradient(180deg, #33271edb, #18110ee5),
+        repeating-linear-gradient(0deg, transparent 0 3px, #ffffff03 4px);
+      color: #c4ad82;
+      line-height: 1.58;
+      font-size: 13px;
+    }
+
+    .rules b {
+      color: #e2c17b;
+    }
+
+    .sim {
+      margin-top: 18px;
+    }
+
+    .sim button {
+      width: 100%;
+    }
+
+    .tablewrap {
+      margin-top: 14px;
+      max-height: 360px;
+      overflow: auto;
+      border: 1px solid #61472e;
+      border-radius: 4px;
+      background: #130e0be8;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #392b20;
+      color: #c6b18b;
+      font-size: 12px;
+      text-align: left;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      color: #e1c27d;
+      background: linear-gradient(180deg, #392b20, #241a14);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      box-shadow: 0 2px 0 #0005;
+    }
+
+    td:not(:first-child),
+    th:not(:first-child) {
+      text-align: right;
+    }
+
+    tr:hover td {
+      background: #6f3a1a18;
+    }
+
+    footer {
+      padding: 25px 0 45px;
+      text-align: center;
+      color: #806c52;
+      font-size: 11px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      text-shadow: 0 2px 5px #000;
+    }
+
+    @media(max-width:850px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media(max-width:520px) {
+      .container {
+        width: min(94vw, 1180px);
+      }
+
+      header {
+        padding-top: 28px;
+      }
+
+      .card {
+        padding: 17px;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .level {
+        font-size: 78px;
+      }
+
+      .item {
+        height: 270px;
+      }
+
+      h1 {
+        font-size: 42px;
+      }
+    }
+
+    .musicbar {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 50;
+    }
+
+    .musicbtn {
+      padding: 10px 14px;
+      border: 1px solid #80552f;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #3b2c20ee, #17100cee);
+      color: #e1c27d;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: inset 0 1px #fff2, 0 6px 18px #000b;
+    }
+
+    .musicbtn:hover {
+      filter: brightness(1.15);
+    }
+  </style>
+</head>
+
+<body>
+
+  <img class="background" src="fond.webp" alt="" aria-hidden="true">
+  <div class="background-overlay" aria-hidden="true"></div>
+
+  <header class="container">
+    <div class="pill">✦ Forge · équipement · amélioration</div>
+
+    <h1>Forge ton item</h1>
+
+    <p class="sub">
+      Atteins <b>+22</b> avec un maximum possible de <b>+24</b>.
+    </p>
+  </header>
+
+  <main class="container">
+
+    <section class="grid">
+
+      <div class="card">
+
+        <div class="item">
+          <div class="itemname">Équipement</div>
+          <div class="level" id="level">+11</div>
+          <div class="goal">Arrêt · +22 à +24</div>
+        </div>
+
+        <div class="chance">
+          <span class="muted">Chance actuelle</span>
+          <strong id="chance">120%</strong>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="attempt">
+            ⚒ Tenter l'amélioration
+          </button>
+
+          <button class="secondary" id="downgrade">
+            ▼ Descendre de -1
+          </button>
+        </div>
+
+        <button class="dark full" id="reset">
+          ↻ Recommencer
+        </button>
+
+        <button class="secondary full" id="resetAttempts">
+          ⟲ Remettre le compteur à 0
+        </button>
+
+        <div class="message" id="message">
+          L'item commence à +11. Bonne chance.
+        </div>
+
+        <div class="stats">
+
+          <div class="stat">
+            <small>Tentatives</small>
+            <b id="attempts">0</b>
+          </div>
+
+          <div class="stat">
+            <small>Meilleur</small>
+            <b id="best">+11</b>
+          </div>
+
+          <div class="stat">
+            <small>Coût</small>
+            <b id="liveCost">0 🪙</b>
+          </div>
+
+          <div class="stat">
+            <small>Échecs</small>
+            <b id="failures">0</b>
+          </div>
+
+        </div>
+      </div>
+
+      <aside class="card">
+
+        <h2>Économie</h2>
+
+        <p class="desc">
+          Les coûts du système de forge sont comptabilisés pour chaque
+          tentative et chaque événement.
+        </p>
+
+        <div class="cost">
+          <div class="costleft">
+            <span class="coin silver">🪙</span>
+            Tentative
+          </div>
+          <b>50 argent</b>
+        </div>
+
+        <div class="cost">
+          <div class="costleft">
+            <span class="coin silver">🪙</span>
+            Échec
+          </div>
+          <b>+140 argent</b>
+        </div>
+
+        <div class="cost">
+          <div class="costleft">
+            <span class="coin gold">🪙</span>
+            Baisse automatique
+          </div>
+          <b>20 argent</b>
+        </div>
+
+        <div class="rules">
+
+          <b>Chances de réussite</b><br><br>
+
+          +11 : <b>120%</b><br>
+          +12 : <b>40%</b><br>
+          +13 : <b>70%</b><br>
+          +14 : <b>26%</b><br>
+          +15 : <b>24%</b><br>
+          +16 : <b>10%</b><br>
+          +17 : <b>14%</b><br>
+          +18 : <b>7%</b><br>
+          +19 : <b>2%</b><br>
+          +20 : <b>1%</b><br>
+          +21 : <b>1,6%</b><br><br>
+
+          À <b>+22</b>, <b>+23</b> ou <b>+24</b> :
+          la forge s'arrête immédiatement.
+
+          <br><br>
+
+          <b>Échec = 190 argent</b> au total :
+          50 argent de tentative + 140 argent d'échec.
+
+          <br><br>
+
+          À <b>+12</b>, <b>+16</b> et <b>+19</b> :
+          baisse automatique de 1 niveau.
+
+          <br><br>
+
+          💰 <b>1 or = 1 000 argent</b>
+
+        </div>
+
+      </aside>
+
+    </section>
+
+    <section class="card sim">
+
+      <h2>Simulation × 1 000</h2>
+
+      <p class="desc">
+        1 000 parcours indépendants commencent à +11.
+        Chaque parcours continue à tenter les améliorations jusqu'à
+        atteindre +22, +23 ou +24.
+      </p>
+
+      <button class="primary" id="simulate">
+        ⚔ Lancer 1 000 simulations
+      </button>
+
+      <div class="bigstats">
+
+        <div class="big">
+          <span>🎯 Tentatives moyennes</span>
+          <strong id="avg">—</strong>
+        </div>
+
+        <div class="big">
+          <span>💰 Coût moyen</span>
+          <strong id="avgCost">—</strong>
+        </div>
+
+        <div class="big">
+          <span>📊 Tentatives médianes</span>
+          <strong id="med">—</strong>
+        </div>
+
+        <div class="big">
+          <span>🪙 Coût médian</span>
+          <strong id="medCost">—</strong>
+        </div>
+
+        <div class="big">
+          <span>⬇️ Minimum</span>
+          <strong id="min">—</strong>
+        </div>
+
+        <div class="big">
+          <span>⬆️ Maximum</span>
+          <strong id="max">—</strong>
+        </div>
+
+      </div>
+
+      <div class="message" id="simmsg">
+        Aucune simulation lancée.
+      </div>
+
+      <div class="tablewrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>🎲 Parcours</th>
+              <th>🎯 Tentatives</th>
+              <th>🪙 Coût</th>
+              <th>❌ Échecs</th>
+              <th>⬇️ Baisses</th>
+              <th>🏆 Final</th>
+            </tr>
+          </thead>
+
+          <tbody id="results"></tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="container">
+    Forge +24 · simulation locale · 1 000 argent = 1 or
+  </footer>
+
+  <div class="musicbar">
+    <button id="musicBtn" class="musicbtn" type="button">
+      🔊 Musique
+    </button>
+
+    <audio id="bgMusic" src="song.mp3" loop preload="auto"></audio>
+  </div>
+
+
+  <script>
+
+    /*
+     * CHANCES
+     *
+     * +20 = 1%
+     * +21 = 1,6%
+     *
+     * +22 / +23 / +24 = arrêt
+     */
+
+    const chances = {
+      11: 120,
+      12: 40,
+      13: 70,
+      14: 26,
+      15: 24,
+      16: 10,
+      17: 14,
+      18: 7,
+      19: 2,
+      20: 1,
+      21: 1.6
+    };
+
+
+    /*
+     * CONFIGURATION
+     */
+
+    const START_LEVEL = 11;
+
+    const STOP_LEVEL = 22;
+
+    const MAX_LEVEL = 24;
+
+    const A = 50;
+    const F = 140;
+    const D = 20;
+
+
+    /*
+     * ETAT
+     */
+
+    let level = START_LEVEL;
+    let attempts = 0;
+    let best = START_LEVEL;
+    let cost = 0;
+    let failures = 0;
+    let downgrades = 0;
+
+
+    /*
+     * OUTILS
+     */
+
+    const $ = id => document.getElementById(id);
+
+    const rnd = (a, b) =>
+      Math.floor(Math.random() * (b - a + 1)) + a;
+
+
+    /*
+     * L'ITEM EST TERMINÉ À +22 OU PLUS
+     */
+
+    function isFinished(lvl) {
+      return lvl >= STOP_LEVEL;
+    }
+
+
+    /*
+     * AFFICHAGE
+     */
+
+    function update() {
+
+      $("level").textContent = "+" + level;
+
+      if (isFinished(level)) {
+        $("chance").textContent = "ARRÊT";
+      } else {
+        $("chance").textContent =
+          String(chances[level]).replace(".", ",") + "%";
+      }
+
+      $("attempts").textContent = attempts;
+
+      $("best").textContent = "+" + best;
+
+      $("liveCost").textContent =
+        cost.toLocaleString("fr-FR") + " 🪙";
+
+      $("failures").textContent = failures;
+
+
+      /*
+       * On ne peut plus tenter à partir de +22.
+       */
+
+      $("attempt").disabled = isFinished(level);
+
+      $("downgrade").disabled = level <= START_LEVEL;
+
+
+      /*
+       * MESSAGE DE FIN
+       */
+
+      if (level === 22) {
+
+        $("message").innerHTML =
+          "<b style='color:#63cf8f'>✦ +22 atteint ! La forge est terminée.</b>";
+
+      } else if (level === 23) {
+
+        $("message").innerHTML =
+          "<b style='color:#63cf8f'>✦ +23 atteint ! La forge est terminée.</b>";
+
+      } else if (level === 24) {
+
+        $("message").innerHTML =
+          "<b style='color:#63cf8f'>✦ +24 atteint ! Maximum atteint !</b>";
+      }
+    }
+
+
+    /*
+     * TENTATIVE
+     */
+
+    function attempt() {
+
+      if (isFinished(level)) {
+        return;
+      }
+
+      /*
+       * Une tentative = +50 argent
+       */
+
+      attempts++;
+
+      cost += A;
+
+      const old = level;
+
+
+      /*
+       * CHANCE DE RÉUSSITE
+       */
+
+      const chance = chances[level] ?? 0;
+
+      if (Math.random() * 100 < chance) {
+
+        /*
+         * Une réussite donne +1 à +3 niveaux.
+         *
+         * Exemple :
+         * +19 → +20 / +21 / +22
+         * +20 → +21 / +22 / +23
+         * +21 → +22 / +23 / +24
+         */
+
+        level = Math.min(
+          MAX_LEVEL,
+          level + rnd(1, 3)
+        );
+
+
+        /*
+         * BAISSES AUTOMATIQUES
+         */
+
+        if (
+          level === 12 ||
+          level === 16 ||
+          level === 19
+        ) {
+
+          level--;
+
+          cost += D;
+
+          downgrades++;
+
+          $("message").textContent =
+            `Réussi ! +${old} → +${level} · ` +
+            `Baisse automatique · 20 argent`;
+
+        } else {
+
+          $("message").textContent =
+            `Réussi ! +${old} → +${level}`;
+        }
+
+      } else {
+
+        /*
+         * ÉCHEC
+         *
+         * 50 tentative
+         * +140 échec
+         * =190 argent
+         */
+
+        failures++;
+
+        cost += F;
+
+        level = Math.max(
+          START_LEVEL,
+          level - rnd(0, 2)
+        );
+
+        $("message").textContent =
+          `Échec ! +${old} → +${level} · 190 argent`;
+      }
+
+
+      /*
+       * MEILLEUR NIVEAU
+       */
+
+      best = Math.max(best, level);
+
+      update();
+    }
+
+
+    /*
+     * RESET COMPLET
+     */
+
+    function reset() {
+
+      level = START_LEVEL;
+      attempts = 0;
+      best = START_LEVEL;
+      cost = 0;
+      failures = 0;
+      downgrades = 0;
+
+      $("message").textContent =
+        "L'item commence à +11. Bonne chance.";
+
+      update();
+    }
+
+
+    /*
+     * UNE SIMULATION
+     *
+     * Même logique que le système réel.
+     */
+
+    function one() {
+
+      let l = START_LEVEL;
+
+      let a = 0;
+
+      let c = 0;
+
+      let f = 0;
+
+      let d = 0;
+
+
+      /*
+       * On continue tant que l'item est sous +22.
+       *
+       * +22, +23 et +24 terminent le parcours.
+       */
+
+      while (!isFinished(l)) {
+
+        a++;
+
+        c += A;
+
+
+        const chance = chances[l] ?? 0;
+
+
+        /*
+         * RÉUSSITE
+         */
+
+        if (Math.random() * 100 < chance) {
+
+          l = Math.min(
+            MAX_LEVEL,
+            l + rnd(1, 3)
+          );
+
+
+          /*
+           * Baisse automatique
+           */
+
+          if (
+            l === 12 ||
+            l === 16 ||
+            l === 19
+          ) {
+
+            l--;
+
+            c += D;
+
+            d++;
+          }
+
+        } else {
+
+          /*
+           * ÉCHEC
+           */
+
+          f++;
+
+          c += F;
+
+          l = Math.max(
+            START_LEVEL,
+            l - rnd(0, 2)
+          );
+        }
+      }
+
+
+      return {
+        a,
+        c,
+        f,
+        d,
+        finalLevel: l
+      };
+    }
+
+
+    /*
+     * SIMULATION ×1000
+     */
+
+    function simulate() {
+
+      const r = Array.from(
+        { length: 1000 },
+        one
+      );
+
+
+      /*
+       * TENTATIVES
+       */
+
+      const attemptsList =
+        r.map(x => x.a).sort((x, y) => x - y);
+
+
+      /*
+       * COÛTS
+       */
+
+      const costsList =
+        r.map(x => x.c).sort((x, y) => x - y);
+
+
+      /*
+       * MOYENNES
+       */
+
+      const av =
+        attemptsList.reduce(
+          (sum, value) => sum + value,
+          0
+        ) / 1000;
+
+
+      const ac =
+        costsList.reduce(
+          (sum, value) => sum + value,
+          0
+        ) / 1000;
+
+
+      /*
+       * MÉDIANES
+       */
+
+      const md =
+        (attemptsList[499] +
+          attemptsList[500]) / 2;
+
+
+      const mC =
+        (costsList[499] +
+          costsList[500]) / 2;
+
+
+      /*
+       * AFFICHAGE DES STATISTIQUES
+       */
+
+      $("avg").textContent =
+        av.toFixed(2) + " tent.";
+
+      $("avgCost").innerHTML =
+        `${Math.round(ac).toLocaleString("fr-FR")} 🪙` +
+        `<br><small>${(ac / 1000).toFixed(2)} 💰 or</small>`;
+
+
+      $("med").textContent =
+        md.toFixed(0) + " tent.";
+
+      $("medCost").innerHTML =
+        `${Math.round(mC).toLocaleString("fr-FR")} 🪙` +
+        `<br><small>${(mC / 1000).toFixed(2)} 💰 or</small>`;
+
+
+      $("min").textContent =
+        attemptsList[0] + " tent.";
+
+      $("max").textContent =
+        attemptsList[999] + " tent.";
+
+
+      /*
+       * NOMBRE D'ITEMS FINISSANT À CHAQUE NIVEAU
+       */
+
+      const finals = {
+        22: 0,
+        23: 0,
+        24: 0
+      };
+
+      r.forEach(x => {
+        if (finals[x.finalLevel] !== undefined) {
+          finals[x.finalLevel]++;
+        }
+      });
+
+
+      /*
+       * MESSAGE GLOBAL
+       */
+
+      $("simmsg").innerHTML =
+        `<b style="color:#e4c57e">✦ 1 000 parcours terminés</b>` +
+        `<br><br>` +
+
+        `🎯 Moyenne : <b>${av.toFixed(2)} tentatives</b>` +
+        ` · 💰 Coût moyen : <b>` +
+        `${Math.round(ac).toLocaleString("fr-FR")} argent` +
+        ` (${(ac / 1000).toFixed(2)} or)</b>` +
+
+        `<br><br>` +
+
+        `📊 Médiane : <b>${md.toFixed(0)} tentatives</b>` +
+        ` · 🪙 Coût médian : <b>` +
+        `${Math.round(mC).toLocaleString("fr-FR")} argent` +
+        ` (${(mC / 1000).toFixed(2)} or)</b>` +
+
+        `<br><br>` +
+
+        `🏆 +22 : <b>${finals[22]}</b>` +
+        ` · +23 : <b>${finals[23]}</b>` +
+        ` · +24 : <b>${finals[24]}</b>`;
+
+
+      /*
+       * TABLEAU
+       */
+
+      $("results").innerHTML = r.map((x, i) =>
+
+        `<tr>
+          <td>#${i + 1}</td>
+
+          <td>
+            ${x.a}
+          </td>
+
+          <td>
+            ${x.c.toLocaleString("fr-FR")} argent
+          </td>
+
+          <td>
+            ${x.f}
+          </td>
+
+          <td>
+            ${x.d}
+          </td>
+
+          <td>
+            <b>+${x.finalLevel}</b>
+          </td>
+        </tr>`
+
+      ).join("");
+    }
+
+
+    /*
+     * DESCENTE VOLONTAIRE
+     */
+
+    $("downgrade").onclick = () => {
+
+      if (level > START_LEVEL && !isFinished(level)) {
+
+        level--;
+
+        cost += D;
+
+        downgrades++;
+
+        $("message").textContent =
+          "Descente volontaire · 20 argent";
+
+        update();
+      }
+    };
+
+
+    /*
+     * BOUTONS
+     */
+
+    $("attempt").onclick = attempt;
+
+    $("reset").onclick = reset;
+
+    $("resetAttempts").onclick = () => {
+
+      attempts = 0;
+
+      update();
+    };
+
+    $("simulate").onclick = simulate;
+
+
+    /*
+     * INITIALISATION
+     */
+
+    update();
+
+
+    /*
+     * MUSIQUE
+     */
+
+    const bgMusic =
+      document.getElementById("bgMusic");
+
+    const musicBtn =
+      document.getElementById("musicBtn");
+
+
+    musicBtn.addEventListener("click", () => {
+
+      if (bgMusic.paused) {
+
+        bgMusic.play()
+          .then(() => {
+            musicBtn.textContent = "🔊 Musique";
+          })
+          .catch(() => {});
+
+      } else {
+
+        bgMusic.pause();
+
+        musicBtn.textContent = "🔇 Musique";
+      }
+    });
+
+
+    /*
+     * AUTOPLAY AU PREMIER CLIC
+     */
+
+    document.addEventListener(
+      "click",
+      () => {
+
+        if (bgMusic.paused) {
+          bgMusic.play().catch(() => {});
+        }
+
+      },
+      { once: true }
+    );
+
+  </script>
+
+</body>
+
+</html>
