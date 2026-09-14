@@ -891,6 +891,16 @@
 
       </div>
 
+      <div class="actions" style="margin-top:10px;">
+        <button class="secondary" id="downloadCsv" disabled>
+          ⬇ Télécharger CSV
+        </button>
+
+        <button class="secondary" id="downloadJson" disabled>
+          ⬇ Télécharger JSON
+        </button>
+      </div>
+
     </section>
 
   </main>
@@ -935,6 +945,8 @@
         currencyWord: "argent",
         goldWord: "or",
         forItemRange: "(Pour un item +22 à 24)",
+        downloadCsvBtn: "⬇ Télécharger CSV",
+        downloadJsonBtn: "⬇ Télécharger JSON",
         rulesHTML: `<b>Chances de réussite</b><br><br>
 
           +11 : <b>120%</b><br>
@@ -1030,6 +1042,8 @@
         currencyWord: "silver",
         goldWord: "gold",
         forItemRange: "(For a +22 to +24 item)",
+        downloadCsvBtn: "⬇ Download CSV",
+        downloadJsonBtn: "⬇ Download JSON",
         rulesHTML: `<b>Success chances</b><br><br>
 
           +11: <b>120%</b><br>
@@ -1348,6 +1362,9 @@
 
       $("footerText").textContent = tr.footer;
 
+      $("downloadCsv").textContent = tr.downloadCsvBtn;
+      $("downloadJson").textContent = tr.downloadJsonBtn;
+
       applyMuteState();
     }
 
@@ -1570,7 +1587,79 @@
         one
       ).map((x, i) => ({ ...x, idx: i + 1 }));
 
+      $("downloadCsv").disabled = false;
+      $("downloadJson").disabled = false;
+
       renderSimulation();
+    }
+
+
+    /*
+     * TÉLÉCHARGEMENT DES DONNÉES DE SIMULATION
+     */
+
+    function downloadFile(filename, content, mime) {
+
+      const blob = new Blob([content], { type: mime });
+
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = filename;
+
+      document.body.appendChild(a);
+
+      a.click();
+
+      document.body.removeChild(a);
+
+      URL.revokeObjectURL(url);
+    }
+
+    function simDataAsObjects() {
+
+      return lastSim.map(x => ({
+        run: x.idx,
+        attempts: x.a,
+        cost_silver: x.c,
+        cost_gold: Math.floor(x.c / 1000),
+        failures: x.f,
+        downgrades: x.d,
+        final_level: x.finalLevel
+      }));
+    }
+
+    function downloadCSV() {
+
+      if (!lastSim) return;
+
+      const rows = simDataAsObjects();
+
+      const header = Object.keys(rows[0]);
+
+      const lines = [
+        header.join(","),
+        ...rows.map(row => header.map(k => row[k]).join(","))
+      ];
+
+      downloadFile(
+        "forge-simulation.csv",
+        lines.join("\n"),
+        "text/csv;charset=utf-8;"
+      );
+    }
+
+    function downloadJSON() {
+
+      if (!lastSim) return;
+
+      downloadFile(
+        "forge-simulation.json",
+        JSON.stringify(simDataAsObjects(), null, 2),
+        "application/json;charset=utf-8;"
+      );
     }
 
 
@@ -1770,6 +1859,9 @@
     };
 
     $("simulate").onclick = simulate;
+
+    $("downloadCsv").onclick = downloadCSV;
+    $("downloadJson").onclick = downloadJSON;
 
 
     /*
