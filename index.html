@@ -635,7 +635,7 @@
 
           <div class="stat">
             <small>Coût</small>
-            <b id="liveCost">0 🪙</b>
+            <b id="liveCost">0 💰</b>
           </div>
 
           <div class="stat">
@@ -657,7 +657,7 @@
 
         <div class="cost">
           <div class="costleft">
-            <span class="coin silver">🪙</span>
+            <span class="coin silver">💰</span>
             Tentative
           </div>
           <b>50 argent</b>
@@ -665,15 +665,15 @@
 
         <div class="cost">
           <div class="costleft">
-            <span class="coin silver">🪙</span>
+            <span class="coin silver">💰</span>
             Échec
           </div>
-          <b>+140 argent</b>
+          <b>140 argent</b>
         </div>
 
         <div class="cost">
           <div class="costleft">
-            <span class="coin gold">🪙</span>
+            <span class="coin gold">💰</span>
             Baisse automatique
           </div>
           <b>20 argent</b>
@@ -778,7 +778,7 @@
             <tr>
               <th>🎲 Parcours</th>
               <th>🎯 Tentatives</th>
-              <th>🪙 Coût</th>
+              <th>💰 Coût</th>
               <th>❌ Échecs</th>
               <th>⬇️ Baisses</th>
               <th>🏆 Final</th>
@@ -900,7 +900,7 @@
       $("best").textContent = "+" + best;
 
       $("liveCost").textContent =
-        cost.toLocaleString("fr-FR") + " 🪙";
+        cost.toLocaleString("fr-FR") + " 💰";
 
       $("failures").textContent = failures;
 
@@ -1220,7 +1220,7 @@
         av.toFixed(2) + " tent.";
 
       $("avgCost").innerHTML =
-        `${Math.round(ac).toLocaleString("fr-FR")} 🪙` +
+        `${Math.round(ac).toLocaleString("fr-FR")} 💰` +
         `<br><small>${(ac / 1000).toFixed(2)} 💰 or</small>`;
 
 
@@ -1228,7 +1228,7 @@
         md.toFixed(0) + " tent.";
 
       $("medCost").innerHTML =
-        `${Math.round(mC).toLocaleString("fr-FR")} 🪙` +
+        `${Math.round(mC).toLocaleString("fr-FR")} 💰` +
         `<br><small>${(mC / 1000).toFixed(2)} 💰 or</small>`;
 
 
@@ -1272,7 +1272,7 @@
         `<br><br>` +
 
         `📊 Médiane : <b>${md.toFixed(0)} tentatives</b>` +
-        ` · 🪙 Coût médian : <b>` +
+        ` · 💰 Coût médian : <b>` +
         `${Math.round(mC).toLocaleString("fr-FR")} argent` +
         ` (${(mC / 1000).toFixed(2)} or)</b>` +
 
