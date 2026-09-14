@@ -832,6 +832,17 @@
         ⚔ Lancer 1 000 simulations
       </button>
 
+      <p class="desc" id="filterLabelText" style="margin-top:14px;">
+        Filtrer les résultats par niveau final
+      </p>
+
+      <div class="actions" id="filterRow" style="grid-template-columns: repeat(4, 1fr); margin-top:6px; margin-bottom:16px;">
+        <button class="primary" id="filterAllBtn" data-filter="all">Tous</button>
+        <button class="secondary" id="filter22Btn" data-filter="22">+22</button>
+        <button class="secondary" id="filter23Btn" data-filter="23">+23</button>
+        <button class="secondary" id="filter24Btn" data-filter="24">+24</button>
+      </div>
+
       <div class="bigstats">
 
         <div class="big">
@@ -947,6 +958,13 @@
         forItemRange: "(Pour un item +22 à 24)",
         downloadCsvBtn: "⬇ Télécharger CSV",
         downloadJsonBtn: "⬇ Télécharger JSON",
+        filterLabel: "Filtrer les résultats par niveau final",
+        filterAll: "Tous",
+        filter22: "+22",
+        filter23: "+23",
+        filter24: "+24",
+        noMatch: "Aucun parcours ne termine à ce niveau.",
+        matchCount: (n) => `${n} parcours sur 1 000 finissent à ce niveau.`,
         rulesHTML: `<b>Chances de réussite</b><br><br>
 
           +11 : <b>120%</b><br>
@@ -1044,6 +1062,13 @@
         forItemRange: "(For a +22 to +24 item)",
         downloadCsvBtn: "⬇ Download CSV",
         downloadJsonBtn: "⬇ Download JSON",
+        filterLabel: "Filter results by final level",
+        filterAll: "All",
+        filter22: "+22",
+        filter23: "+23",
+        filter24: "+24",
+        noMatch: "No run ends at this level.",
+        matchCount: (n) => `${n} out of 1,000 runs end at this level.`,
         rulesHTML: `<b>Success chances</b><br><br>
 
           +11: <b>120%</b><br>
@@ -1180,6 +1205,8 @@
     };
 
     let sortState = { key: null, dir: 1 };
+
+    let finalFilter = "all";
 
     function headerLabel(id, label) {
 
@@ -1364,6 +1391,12 @@
 
       $("downloadCsv").textContent = tr.downloadCsvBtn;
       $("downloadJson").textContent = tr.downloadJsonBtn;
+
+      $("filterLabelText").textContent = tr.filterLabel;
+      $("filterAllBtn").textContent = tr.filterAll;
+      $("filter22Btn").textContent = tr.filter22;
+      $("filter23Btn").textContent = tr.filter23;
+      $("filter24Btn").textContent = tr.filter24;
 
       applyMuteState();
     }
@@ -1667,6 +1700,17 @@
      * AFFICHAGE DE LA SIMULATION (traduisible)
      */
 
+    function median(sortedArr) {
+
+      const mid = Math.floor(sortedArr.length / 2);
+
+      if (sortedArr.length % 2 === 0) {
+        return (sortedArr[mid - 1] + sortedArr[mid]) / 2;
+      }
+
+      return sortedArr[mid];
+    }
+
     function renderSimulation() {
 
       const tr = t();
@@ -1687,7 +1731,48 @@
         return;
       }
 
-      const r = lastSim;
+      const full = lastSim;
+
+      const r = finalFilter === "all"
+        ? full
+        : full.filter(x => x.finalLevel === Number(finalFilter));
+
+
+      const finals = {
+        22: 0,
+        23: 0,
+        24: 0
+      };
+
+      full.forEach(x => {
+        if (finals[x.finalLevel] !== undefined) {
+          finals[x.finalLevel]++;
+        }
+      });
+
+
+      if (r.length === 0) {
+
+        $("avg").textContent = "—";
+        $("avgCost").textContent = "—";
+        $("med").textContent = "—";
+        $("medCost").textContent = "—";
+        $("min").textContent = "—";
+        $("max").textContent = "—";
+
+        $("results").innerHTML = "";
+
+        $("simmsg").innerHTML =
+          `<b style="color:#e4c57e">${tr.summaryTitle}</b>` +
+          `<br><br>` +
+          tr.noMatch +
+          `<br><br>` +
+          `🏆 +22 : <b>${finals[22]}</b>` +
+          ` · +23 : <b>${finals[23]}</b>` +
+          ` · +24 : <b>${finals[24]}</b>`;
+
+        return;
+      }
 
 
       const attemptsList =
@@ -1702,24 +1787,19 @@
         attemptsList.reduce(
           (sum, value) => sum + value,
           0
-        ) / 1000;
+        ) / r.length;
 
 
       const ac =
         costsList.reduce(
           (sum, value) => sum + value,
           0
-        ) / 1000;
+        ) / r.length;
 
 
-      const md =
-        (attemptsList[499] +
-          attemptsList[500]) / 2;
+      const md = median(attemptsList);
 
-
-      const mC =
-        (costsList[499] +
-          costsList[500]) / 2;
+      const mC = median(costsList);
 
 
       $("avg").innerHTML =
@@ -1745,26 +1825,17 @@
         `<br><small>${tr.forItemRange}</small>`;
 
       $("max").innerHTML =
-        attemptsList[999] + " " + tr.unit +
+        attemptsList[attemptsList.length - 1] + " " + tr.unit +
         `<br><small>${tr.forItemRange}</small>`;
-
-
-      const finals = {
-        22: 0,
-        23: 0,
-        24: 0
-      };
-
-      r.forEach(x => {
-        if (finals[x.finalLevel] !== undefined) {
-          finals[x.finalLevel]++;
-        }
-      });
 
 
       $("simmsg").innerHTML =
         `<b style="color:#e4c57e">${tr.summaryTitle}</b>` +
         `<br><br>` +
+
+        (finalFilter !== "all"
+          ? tr.matchCount(r.length) + `<br><br>`
+          : "") +
 
         `🎯 ${tr.summaryAvg} : <b>${av.toFixed(2)} ${tr.summaryAttempts}</b>` +
         ` · 💰 ${tr.summaryCostAvg} : <b>` +
@@ -1862,6 +1933,26 @@
 
     $("downloadCsv").onclick = downloadCSV;
     $("downloadJson").onclick = downloadJSON;
+
+    function setFinalFilter(value) {
+
+      finalFilter = value;
+
+      ["filterAllBtn", "filter22Btn", "filter23Btn", "filter24Btn"].forEach(id => {
+
+        const isActive = $(id).dataset.filter === value;
+
+        $(id).classList.toggle("primary", isActive);
+        $(id).classList.toggle("secondary", !isActive);
+      });
+
+      renderSimulation();
+    }
+
+    $("filterAllBtn").onclick = () => setFinalFilter("all");
+    $("filter22Btn").onclick = () => setFinalFilter("22");
+    $("filter23Btn").onclick = () => setFinalFilter("23");
+    $("filter24Btn").onclick = () => setFinalFilter("24");
 
 
     /*
