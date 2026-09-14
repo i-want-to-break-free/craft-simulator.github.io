@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" id="htmlRoot">
 
 <head>
   <meta charset="UTF-8">
@@ -78,9 +78,66 @@
       margin: auto;
     }
 
+    /* barre du haut : langue + son, toujours visible */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 14px 12px;
+      background: linear-gradient(180deg, #100b09f2, #100b09b0 80%, transparent);
+      backdrop-filter: blur(2px);
+    }
+
+    .topbtn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-radius: 5px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .03em;
+      cursor: pointer;
+      transition: .16s ease;
+    }
+
+    .topbtn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.15);
+    }
+
+    .topbtn:active {
+      transform: translateY(0);
+    }
+
+    #langBtn {
+      border: 1px solid #4c9c74;
+      background: linear-gradient(180deg, #1f5c3fee, #0c1712ee);
+      color: #baf0d2;
+      box-shadow: inset 0 1px #ffffff30, 0 8px 22px #000c;
+    }
+
+    #muteBtn {
+      border: 1px solid #80552f;
+      background: linear-gradient(180deg, #3b2c20ee, #17100cee);
+      color: #e1c27d;
+      box-shadow: inset 0 1px #fff2, 0 8px 22px #000c;
+    }
+
+    #muteBtn.is-muted {
+      border-color: #9d2717;
+      color: #f0b8ab;
+      background: linear-gradient(180deg, #4a2018ee, #180d0bee);
+    }
+
     header {
       text-align: center;
-      padding: 42px 0 28px;
+      padding: 24px 0 28px;
       text-shadow: 0 3px 12px #000;
     }
 
@@ -517,10 +574,6 @@
         width: min(94vw, 1180px);
       }
 
-      header {
-        padding-top: 28px;
-      }
-
       .card {
         padding: 17px;
       }
@@ -540,29 +593,11 @@
       h1 {
         font-size: 42px;
       }
-    }
 
-    .musicbar {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      z-index: 50;
-    }
-
-    .musicbtn {
-      padding: 10px 14px;
-      border: 1px solid #80552f;
-      border-radius: 4px;
-      background: linear-gradient(180deg, #3b2c20ee, #17100cee);
-      color: #e1c27d;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: 12px;
-      font-weight: 700;
-      box-shadow: inset 0 1px #fff2, 0 6px 18px #000b;
-    }
-
-    .musicbtn:hover {
-      filter: brightness(1.15);
+      .topbtn {
+        padding: 11px 14px;
+        font-size: 13px;
+      }
     }
   </style>
 </head>
@@ -572,12 +607,24 @@
   <img class="background" src="fond.webp" alt="" aria-hidden="true">
   <div class="background-overlay" aria-hidden="true"></div>
 
+  <div class="topbar">
+    <button id="langBtn" class="topbtn" type="button">
+      🌐 ENGLISH MODE
+    </button>
+
+    <button id="muteBtn" class="topbtn" type="button">
+      🔊 Couper le son
+    </button>
+  </div>
+
+  <audio id="bgMusic" src="song.mp3" loop preload="auto"></audio>
+
   <header class="container">
-    <div class="pill">✦ Forge · équipement · amélioration</div>
+    <div class="pill" id="pillText">✦ Forge · équipement · amélioration</div>
 
-    <h1>Forge ton item</h1>
+    <h1 id="mainTitle">Forge ton item</h1>
 
-    <p class="sub">
+    <p class="sub" id="subText">
       Atteins <b>+22</b> avec un maximum possible de <b>+24</b>.
     </p>
   </header>
@@ -589,13 +636,13 @@
       <div class="card">
 
         <div class="item">
-          <div class="itemname">Équipement</div>
+          <div class="itemname" id="itemNameLabel">Équipement</div>
           <div class="level" id="level">+11</div>
-          <div class="goal">Arrêt · +22 à +24</div>
+          <div class="goal" id="goalLabel">Arrêt · +22 à +24</div>
         </div>
 
         <div class="chance">
-          <span class="muted">Chance actuelle</span>
+          <span class="muted" id="chanceLabel">Chance actuelle</span>
           <strong id="chance">120%</strong>
         </div>
 
@@ -624,22 +671,22 @@
         <div class="stats">
 
           <div class="stat">
-            <small>Tentatives</small>
+            <small id="statAttemptsLabel">Tentatives</small>
             <b id="attempts">0</b>
           </div>
 
           <div class="stat">
-            <small>Meilleur</small>
+            <small id="statBestLabel">Meilleur</small>
             <b id="best">+11</b>
           </div>
 
           <div class="stat">
-            <small>Coût</small>
-            <b id="liveCost">0 💰</b>
+            <small id="statCostLabel">Coût</small>
+            <b id="liveCost">0 argent 💰</b>
           </div>
 
           <div class="stat">
-            <small>Échecs</small>
+            <small id="statFailuresLabel">Échecs</small>
             <b id="failures">0</b>
           </div>
 
@@ -648,9 +695,9 @@
 
       <aside class="card">
 
-        <h2>Économie</h2>
+        <h2 id="economyTitle">Économie</h2>
 
-        <p class="desc">
+        <p class="desc" id="economyDesc">
           Les coûts du système de forge sont comptabilisés pour chaque
           tentative et chaque événement.
         </p>
@@ -658,28 +705,28 @@
         <div class="cost">
           <div class="costleft">
             <span class="coin silver">💰</span>
-            Tentative
+            <span id="costAttemptLabel">Tentative</span>
           </div>
-          <b>50 argent</b>
+          <b id="costAttemptValue">50 argent</b>
         </div>
 
         <div class="cost">
           <div class="costleft">
             <span class="coin silver">💰</span>
-            Échec
+            <span id="costFailureLabel">Échec</span>
           </div>
-          <b>140 argent</b>
+          <b id="costFailureValue">140 argent</b>
         </div>
 
         <div class="cost">
           <div class="costleft">
             <span class="coin gold">💰</span>
-            Baisse automatique
+            <span id="costDowngradeLabel">Baisse automatique</span>
           </div>
-          <b>20 argent</b>
+          <b id="costDowngradeValue">20 argent</b>
         </div>
 
-        <div class="rules">
+        <div class="rules" id="rulesBlock">
 
           <b>Chances de réussite</b><br><br>
 
@@ -720,9 +767,9 @@
 
     <section class="card sim">
 
-      <h2>Simulation × 1 000</h2>
+      <h2 id="simTitle">Simulation × 1 000</h2>
 
-      <p class="desc">
+      <p class="desc" id="simDesc">
         1 000 parcours indépendants commencent à +11.
         Chaque parcours continue à tenter les améliorations jusqu'à
         atteindre +22, +23 ou +24.
@@ -735,32 +782,32 @@
       <div class="bigstats">
 
         <div class="big">
-          <span>🎯 Tentatives moyennes</span>
+          <span id="avgLabel">🎯 Tentatives moyennes</span>
           <strong id="avg">—</strong>
         </div>
 
         <div class="big">
-          <span>💰 Coût moyen</span>
+          <span id="avgCostLabel">💰 Coût moyen</span>
           <strong id="avgCost">—</strong>
         </div>
 
         <div class="big">
-          <span>📊 Tentatives médianes</span>
+          <span id="medLabel">📊 Tentatives médianes</span>
           <strong id="med">—</strong>
         </div>
 
         <div class="big">
-          <span>💰 Coût médian</span>
+          <span id="medCostLabel">💰 Coût médian</span>
           <strong id="medCost">—</strong>
         </div>
 
         <div class="big">
-          <span>⬇️ Minimum</span>
+          <span id="minLabel">⬇️ Minimum</span>
           <strong id="min">—</strong>
         </div>
 
         <div class="big">
-          <span>⬆️ Maximum</span>
+          <span id="maxLabel">⬆️ Maximum</span>
           <strong id="max">—</strong>
         </div>
 
@@ -776,12 +823,12 @@
 
           <thead>
             <tr>
-              <th>🎲 Parcours</th>
-              <th>🎯 Tentatives</th>
-              <th>💰 Coût</th>
-              <th>❌ Échecs</th>
-              <th>⬇️ Baisses</th>
-              <th>🏆 Final</th>
+              <th id="thRun">🎲 Parcours</th>
+              <th id="thAttempts">🎯 Tentatives</th>
+              <th id="thCost">💰 Coût</th>
+              <th id="thFailures">❌ Échecs</th>
+              <th id="thDowngrades">⬇️ Baisses</th>
+              <th id="thFinal">🏆 Final</th>
             </tr>
           </thead>
 
@@ -795,28 +842,212 @@
 
   </main>
 
-  <footer class="container">
+  <footer class="container" id="footerText">
     Forge +24 · simulation locale · 1 000 argent = 1 or
   </footer>
-
-  <div class="musicbar">
-    <button id="musicBtn" class="musicbtn" type="button">
-      🔊 Musique
-    </button>
-
-    <audio id="bgMusic" src="song.mp3" loop preload="auto"></audio>
-  </div>
 
 
   <script>
 
     /*
+     * TRADUCTIONS / TRANSLATIONS
+     */
+
+    const T = {
+
+      fr: {
+        pill: "✦ Forge · équipement · amélioration",
+        title: "Forge ton item",
+        subText: "Atteins <b>+22</b> avec un maximum possible de <b>+24</b>.",
+        itemName: "Équipement",
+        goal: "Arrêt · +22 à +24",
+        chanceLabel: "Chance actuelle",
+        stop: "ARRÊT",
+        attemptBtn: "⚒ Tenter l'amélioration",
+        downgradeBtn: "▼ Descendre de -1",
+        resetBtn: "↻ Recommencer",
+        resetAttemptsBtn: "⟲ Remettre le compteur à 0",
+        statAttempts: "Tentatives",
+        statBest: "Meilleur",
+        statCost: "Coût",
+        statFailures: "Échecs",
+        economyTitle: "Économie",
+        economyDesc: "Les coûts du système de forge sont comptabilisés pour chaque tentative et chaque événement.",
+        costAttemptLabel: "Tentative",
+        costFailureLabel: "Échec",
+        costDowngradeLabel: "Baisse automatique",
+        costAttemptValue: "50 argent",
+        costFailureValue: "140 argent",
+        costDowngradeValue: "20 argent",
+        currencyWord: "argent",
+        goldWord: "or",
+        rulesHTML: `<b>Chances de réussite</b><br><br>
+
+          +11 : <b>120%</b><br>
+          +12 : <b>40%</b><br>
+          +13 : <b>70%</b><br>
+          +14 : <b>26%</b><br>
+          +15 : <b>24%</b><br>
+          +16 : <b>10%</b><br>
+          +17 : <b>14%</b><br>
+          +18 : <b>7%</b><br>
+          +19 : <b>2%</b><br>
+          +20 : <b>1%</b><br>
+          +21 : <b>1,6%</b><br><br>
+
+          À <b>+22</b>, <b>+23</b> ou <b>+24</b> :
+          la forge s'arrête immédiatement.
+
+          <br><br>
+
+          <b>Échec = 190 argent</b> au total :
+          50 argent de tentative + 140 argent d'échec.
+
+          <br><br>
+
+          À <b>+12</b>, <b>+16</b> et <b>+19</b> :
+          baisse automatique de 1 niveau. (coût 20 argent)
+
+          <br><br>
+
+          💰 <b>1 or = 1 000 argent</b>`,
+        simTitle: "Simulation × 1 000",
+        simDesc: "1 000 parcours indépendants commencent à +11. Chaque parcours continue à tenter les améliorations jusqu'à atteindre +22, +23 ou +24.",
+        simulateBtn: "⚔ Lancer 1 000 simulations",
+        avgLabel: "🎯 Tentatives moyennes",
+        avgCostLabel: "💰 Coût moyen",
+        medLabel: "📊 Tentatives médianes",
+        medCostLabel: "💰 Coût médian",
+        minLabel: "⬇️ Minimum",
+        maxLabel: "⬆️ Maximum",
+        simDefaultMsg: "Aucune simulation lancée.",
+        thRun: "🎲 Parcours",
+        thAttempts: "🎯 Tentatives",
+        thCost: "💰 Coût",
+        thFailures: "❌ Échecs",
+        thDowngrades: "⬇️ Baisses",
+        thFinal: "🏆 Final",
+        footer: "Forge +24 · simulation locale · 1 000 argent = 1 or",
+        muteOn: "🔊 Couper le son",
+        muteOff: "🔇 Réactiver le son",
+        defaultMessage: "L'item commence à +11. Bonne chance.",
+        unit: "tent.",
+        langBtn: "🌐 ENGLISH MODE",
+        locale: "fr-FR",
+        summaryTitle: "✦ 1 000 parcours terminés",
+        summaryAvg: "Moyenne",
+        summaryAttempts: "tentatives",
+        summaryCostAvg: "Coût moyen",
+        summaryMed: "Médiane",
+        summaryCostMed: "Coût médian",
+        finishedText: (lvl) => lvl === 24
+          ? "✦ +24 atteint ! Maximum atteint !"
+          : `✦ +${lvl} atteint ! La forge est terminée.`,
+        successMsg: (o, n) => `Réussi ! +${o} → +${n}`,
+        successDownMsg: (o, n) => `Réussi ! +${o} → +${n} · Baisse automatique · 20 argent`,
+        failMsg: (o, n) => `Échec ! +${o} → +${n} · 190 argent`,
+        voluntaryDownMsg: "Descente volontaire · 20 argent"
+      },
+
+      en: {
+        pill: "✦ Forge · gear · upgrade",
+        title: "Forge your item",
+        subText: "Reach <b>+22</b> with a maximum possible of <b>+24</b>.",
+        itemName: "Gear",
+        goal: "Stop · +22 to +24",
+        chanceLabel: "Current chance",
+        stop: "STOP",
+        attemptBtn: "⚒ Attempt upgrade",
+        downgradeBtn: "▼ Downgrade by -1",
+        resetBtn: "↻ Restart",
+        resetAttemptsBtn: "⟲ Reset attempt counter",
+        statAttempts: "Attempts",
+        statBest: "Best",
+        statCost: "Cost",
+        statFailures: "Failures",
+        economyTitle: "Economy",
+        economyDesc: "The forge system's costs are tracked for every attempt and every event.",
+        costAttemptLabel: "Attempt",
+        costFailureLabel: "Failure",
+        costDowngradeLabel: "Automatic downgrade",
+        costAttemptValue: "50 silver",
+        costFailureValue: "140 silver",
+        costDowngradeValue: "20 silver",
+        currencyWord: "silver",
+        goldWord: "gold",
+        rulesHTML: `<b>Success chances</b><br><br>
+
+          +11: <b>120%</b><br>
+          +12: <b>40%</b><br>
+          +13: <b>70%</b><br>
+          +14: <b>26%</b><br>
+          +15: <b>24%</b><br>
+          +16: <b>10%</b><br>
+          +17: <b>14%</b><br>
+          +18: <b>7%</b><br>
+          +19: <b>2%</b><br>
+          +20: <b>1%</b><br>
+          +21: <b>1.6%</b><br><br>
+
+          At <b>+22</b>, <b>+23</b> or <b>+24</b>:
+          the forge stops immediately.
+
+          <br><br>
+
+          <b>Failure = 190 silver</b> total:
+          50 silver attempt fee + 140 silver failure fee.
+
+          <br><br>
+
+          At <b>+12</b>, <b>+16</b> and <b>+19</b>:
+          automatic downgrade of 1 level. (cost 20 silver)
+
+          <br><br>
+
+          💰 <b>1 gold = 1,000 silver</b>`,
+        simTitle: "Simulation × 1,000",
+        simDesc: "1,000 independent runs start at +11. Each run keeps attempting upgrades until it reaches +22, +23, or +24.",
+        simulateBtn: "⚔ Run 1,000 simulations",
+        avgLabel: "🎯 Average attempts",
+        avgCostLabel: "💰 Average cost",
+        medLabel: "📊 Median attempts",
+        medCostLabel: "💰 Median cost",
+        minLabel: "⬇️ Minimum",
+        maxLabel: "⬆️ Maximum",
+        simDefaultMsg: "No simulation run yet.",
+        thRun: "🎲 Run",
+        thAttempts: "🎯 Attempts",
+        thCost: "💰 Cost",
+        thFailures: "❌ Failures",
+        thDowngrades: "⬇️ Downgrades",
+        thFinal: "🏆 Final",
+        footer: "Forge +24 · local simulation · 1,000 silver = 1 gold",
+        muteOn: "🔊 Mute sound",
+        muteOff: "🔇 Unmute sound",
+        defaultMessage: "The item starts at +11. Good luck.",
+        unit: "att.",
+        langBtn: "🌐 MODE FRANÇAIS",
+        locale: "en-US",
+        summaryTitle: "✦ 1,000 runs completed",
+        summaryAvg: "Average",
+        summaryAttempts: "attempts",
+        summaryCostAvg: "Average cost",
+        summaryMed: "Median",
+        summaryCostMed: "Median cost",
+        finishedText: (lvl) => lvl === 24
+          ? "✦ +24 reached! Maximum reached!"
+          : `✦ +${lvl} reached! The forge is complete.`,
+        successMsg: (o, n) => `Success! +${o} → +${n}`,
+        successDownMsg: (o, n) => `Success! +${o} → +${n} · Automatic downgrade · 20 silver`,
+        failMsg: (o, n) => `Failure! +${o} → +${n} · 190 silver`,
+        voluntaryDownMsg: "Voluntary downgrade · 20 silver"
+      }
+
+    };
+
+
+    /*
      * CHANCES
-     *
-     * +20 = 1%
-     * +21 = 1,6%
-     *
-     * +22 / +23 / +24 = arrêt
      */
 
     const chances = {
@@ -853,12 +1084,18 @@
      * ETAT
      */
 
+    let lang = "fr";
+
     let level = START_LEVEL;
     let attempts = 0;
     let best = START_LEVEL;
     let cost = 0;
     let failures = 0;
     let downgrades = 0;
+
+    let lastEvent = { type: "start" };
+
+    let lastSim = null;
 
 
     /*
@@ -867,16 +1104,150 @@
 
     const $ = id => document.getElementById(id);
 
+    const t = () => T[lang];
+
     const rnd = (a, b) =>
       Math.floor(Math.random() * (b - a + 1)) + a;
 
 
-    /*
-     * L'ITEM EST TERMINÉ À +22 OU PLUS
-     */
-
     function isFinished(lvl) {
       return lvl >= STOP_LEVEL;
+    }
+
+
+    /*
+     * AUDIO — coupure du son
+     *
+     * bgMusic reste en lecture en boucle en arrière-plan (dès le premier
+     * clic sur la page), mais peut être totalement coupé via muteBtn.
+     */
+
+    const bgMusic = document.getElementById("bgMusic");
+    const muteBtn = document.getElementById("muteBtn");
+
+    let muted = false;
+
+    function applyMuteState() {
+
+      bgMusic.muted = muted;
+
+      muteBtn.textContent = muted ? t().muteOff : t().muteOn;
+
+      muteBtn.classList.toggle("is-muted", muted);
+    }
+
+    muteBtn.addEventListener("click", () => {
+
+      muted = !muted;
+
+      applyMuteState();
+    });
+
+    // démarre la musique dès la première interaction (politique autoplay
+    // des navigateurs) ; si l'utilisateur a déjà coupé le son, elle reste
+    // coupée mais joue silencieusement en arrière-plan.
+    document.addEventListener(
+      "click",
+      () => {
+        bgMusic.play().catch(() => {});
+      },
+      { once: true }
+    );
+
+
+    /*
+     * TEXTE DU MESSAGE PRINCIPAL SELON LE DERNIER ÉVÉNEMENT
+     */
+
+    function messageHTML() {
+
+      const tr = t();
+
+      switch (lastEvent.type) {
+
+        case "success":
+          return tr.successMsg(lastEvent.old, lastEvent.new);
+
+        case "successDowngrade":
+          return tr.successDownMsg(lastEvent.old, lastEvent.new);
+
+        case "fail":
+          return tr.failMsg(lastEvent.old, lastEvent.new);
+
+        case "voluntaryDown":
+          return tr.voluntaryDownMsg;
+
+        case "start":
+        default:
+          return tr.defaultMessage;
+      }
+    }
+
+
+    /*
+     * APPLIQUE TOUS LES TEXTES STATIQUES DE LA LANGUE COURANTE
+     */
+
+    function applyStaticText() {
+
+      const tr = t();
+
+      $("htmlRoot").lang = lang;
+
+      $("langBtn").textContent = tr.langBtn;
+
+      $("pillText").textContent = tr.pill;
+      $("mainTitle").textContent = tr.title;
+      $("subText").innerHTML = tr.subText;
+
+      $("itemNameLabel").textContent = tr.itemName;
+      $("goalLabel").textContent = tr.goal;
+      $("chanceLabel").textContent = tr.chanceLabel;
+
+      $("attempt").textContent = tr.attemptBtn;
+      $("downgrade").textContent = tr.downgradeBtn;
+      $("reset").textContent = tr.resetBtn;
+      $("resetAttempts").textContent = tr.resetAttemptsBtn;
+
+      $("statAttemptsLabel").textContent = tr.statAttempts;
+      $("statBestLabel").textContent = tr.statBest;
+      $("statCostLabel").textContent = tr.statCost;
+      $("statFailuresLabel").textContent = tr.statFailures;
+
+      $("economyTitle").textContent = tr.economyTitle;
+      $("economyDesc").textContent = tr.economyDesc;
+
+      $("costAttemptLabel").textContent = tr.costAttemptLabel;
+      $("costFailureLabel").textContent = tr.costFailureLabel;
+      $("costDowngradeLabel").textContent = tr.costDowngradeLabel;
+
+      $("costAttemptValue").textContent = tr.costAttemptValue;
+      $("costFailureValue").textContent = tr.costFailureValue;
+      $("costDowngradeValue").textContent = tr.costDowngradeValue;
+
+      $("rulesBlock").innerHTML = tr.rulesHTML;
+
+      $("simTitle").textContent = tr.simTitle;
+      $("simDesc").textContent = tr.simDesc;
+      $("simulate").textContent = tr.simulateBtn;
+
+      $("avgLabel").textContent = tr.avgLabel;
+      $("avgCostLabel").textContent = tr.avgCostLabel;
+      $("medLabel").textContent = tr.medLabel;
+      $("medCostLabel").textContent = tr.medCostLabel;
+      $("minLabel").textContent = tr.minLabel;
+      $("maxLabel").textContent = tr.maxLabel;
+
+      $("thRun").textContent = tr.thRun;
+      $("thAttempts").textContent = tr.thAttempts;
+      $("thCost").textContent = tr.thCost;
+      $("thFailures").textContent = tr.thFailures;
+      $("thDowngrades").textContent = tr.thDowngrades;
+      $("thFinal").textContent = tr.thFinal;
+
+      $("footerText").textContent = tr.footer;
+
+      applyMuteState();
     }
 
 
@@ -886,13 +1257,17 @@
 
     function update() {
 
+      const tr = t();
+
       $("level").textContent = "+" + level;
 
       if (isFinished(level)) {
-        $("chance").textContent = "ARRÊT";
+        $("chance").textContent = tr.stop;
       } else {
         $("chance").textContent =
-          String(chances[level]).replace(".", ",") + "%";
+          String(chances[level]).replace(
+            ".", lang === "fr" ? "," : "."
+          ) + "%";
       }
 
       $("attempts").textContent = attempts;
@@ -900,38 +1275,22 @@
       $("best").textContent = "+" + best;
 
       $("liveCost").textContent =
-        cost.toLocaleString("fr-FR") + " 💰";
+        cost.toLocaleString(tr.locale) + " 💰";
 
       $("failures").textContent = failures;
-
-
-      /*
-       * On ne peut plus tenter à partir de +22.
-       */
 
       $("attempt").disabled = isFinished(level);
 
       $("downgrade").disabled = level <= START_LEVEL;
 
-
-      /*
-       * MESSAGE DE FIN
-       */
-
-      if (level === 22) {
+      if (level === 22 || level === 23 || level === 24) {
 
         $("message").innerHTML =
-          "<b style='color:#63cf8f'>✦ +22 atteint ! La forge est terminée.</b>";
+          `<b style='color:#63cf8f'>${tr.finishedText(level)}</b>`;
 
-      } else if (level === 23) {
+      } else {
 
-        $("message").innerHTML =
-          "<b style='color:#63cf8f'>✦ +23 atteint ! La forge est terminée.</b>";
-
-      } else if (level === 24) {
-
-        $("message").innerHTML =
-          "<b style='color:#63cf8f'>✦ +24 atteint ! Maximum atteint !</b>";
+        $("message").textContent = messageHTML();
       }
     }
 
@@ -946,10 +1305,6 @@
         return;
       }
 
-      /*
-       * Une tentative = +50 argent
-       */
-
       attempts++;
 
       cost += A;
@@ -957,32 +1312,15 @@
       const old = level;
 
 
-      /*
-       * CHANCE DE RÉUSSITE
-       */
-
       const chance = chances[level] ?? 0;
 
       if (Math.random() * 100 < chance) {
-
-        /*
-         * Une réussite donne +1 à +3 niveaux.
-         *
-         * Exemple :
-         * +19 → +20 / +21 / +22
-         * +20 → +21 / +22 / +23
-         * +21 → +22 / +23 / +24
-         */
 
         level = Math.min(
           MAX_LEVEL,
           level + rnd(1, 3)
         );
 
-
-        /*
-         * BAISSES AUTOMATIQUES
-         */
 
         if (
           level === 12 ||
@@ -996,25 +1334,14 @@
 
           downgrades++;
 
-          $("message").textContent =
-            `Réussi ! +${old} → +${level} · ` +
-            `Baisse automatique · 20 argent`;
+          lastEvent = { type: "successDowngrade", old, new: level };
 
         } else {
 
-          $("message").textContent =
-            `Réussi ! +${old} → +${level}`;
+          lastEvent = { type: "success", old, new: level };
         }
 
       } else {
-
-        /*
-         * ÉCHEC
-         *
-         * 50 tentative
-         * +140 échec
-         * =190 argent
-         */
 
         failures++;
 
@@ -1025,14 +1352,9 @@
           level - rnd(0, 2)
         );
 
-        $("message").textContent =
-          `Échec ! +${old} → +${level} · 190 argent`;
+        lastEvent = { type: "fail", old, new: level };
       }
 
-
-      /*
-       * MEILLEUR NIVEAU
-       */
 
       best = Math.max(best, level);
 
@@ -1053,8 +1375,7 @@
       failures = 0;
       downgrades = 0;
 
-      $("message").textContent =
-        "L'item commence à +11. Bonne chance.";
+      lastEvent = { type: "start" };
 
       update();
     }
@@ -1062,8 +1383,6 @@
 
     /*
      * UNE SIMULATION
-     *
-     * Même logique que le système réel.
      */
 
     function one() {
@@ -1079,12 +1398,6 @@
       let d = 0;
 
 
-      /*
-       * On continue tant que l'item est sous +22.
-       *
-       * +22, +23 et +24 terminent le parcours.
-       */
-
       while (!isFinished(l)) {
 
         a++;
@@ -1095,10 +1408,6 @@
         const chance = chances[l] ?? 0;
 
 
-        /*
-         * RÉUSSITE
-         */
-
         if (Math.random() * 100 < chance) {
 
           l = Math.min(
@@ -1106,10 +1415,6 @@
             l + rnd(1, 3)
           );
 
-
-          /*
-           * Baisse automatique
-           */
 
           if (
             l === 12 ||
@@ -1125,10 +1430,6 @@
           }
 
         } else {
-
-          /*
-           * ÉCHEC
-           */
 
           f++;
 
@@ -1158,31 +1459,49 @@
 
     function simulate() {
 
-      const r = Array.from(
+      lastSim = Array.from(
         { length: 1000 },
         one
       );
 
+      renderSimulation();
+    }
 
-      /*
-       * TENTATIVES
-       */
+
+    /*
+     * AFFICHAGE DE LA SIMULATION (traduisible)
+     */
+
+    function renderSimulation() {
+
+      const tr = t();
+
+      if (!lastSim) {
+
+        $("simmsg").textContent = tr.simDefaultMsg;
+
+        $("avg").textContent = "—";
+        $("avgCost").textContent = "—";
+        $("med").textContent = "—";
+        $("medCost").textContent = "—";
+        $("min").textContent = "—";
+        $("max").textContent = "—";
+
+        $("results").innerHTML = "";
+
+        return;
+      }
+
+      const r = lastSim;
+
 
       const attemptsList =
         r.map(x => x.a).sort((x, y) => x - y);
 
 
-      /*
-       * COÛTS
-       */
-
       const costsList =
         r.map(x => x.c).sort((x, y) => x - y);
 
-
-      /*
-       * MOYENNES
-       */
 
       const av =
         attemptsList.reduce(
@@ -1198,10 +1517,6 @@
         ) / 1000;
 
 
-      /*
-       * MÉDIANES
-       */
-
       const md =
         (attemptsList[499] +
           attemptsList[500]) / 2;
@@ -1212,36 +1527,28 @@
           costsList[500]) / 2;
 
 
-      /*
-       * AFFICHAGE DES STATISTIQUES
-       */
-
       $("avg").textContent =
-        av.toFixed(2) + " tent.";
+        av.toFixed(2) + " " + tr.unit;
 
       $("avgCost").innerHTML =
-        `${Math.round(ac).toLocaleString("fr-FR")} 💰` +
-        `<br><small>${(ac / 1000).toFixed(2)} 💰 or</small>`;
+        `${Math.round(ac).toLocaleString(tr.locale)} 💰` +
+        `<br><small>${(ac / 1000).toFixed(2)} 💰 ${tr.goldWord}</small>`;
 
 
       $("med").textContent =
-        md.toFixed(0) + " tent.";
+        md.toFixed(0) + " " + tr.unit;
 
       $("medCost").innerHTML =
-        `${Math.round(mC).toLocaleString("fr-FR")} 💰` +
-        `<br><small>${(mC / 1000).toFixed(2)} 💰 or</small>`;
+        `${Math.round(mC).toLocaleString(tr.locale)} 💰` +
+        `<br><small>${(mC / 1000).toFixed(2)} 💰 ${tr.goldWord}</small>`;
 
 
       $("min").textContent =
-        attemptsList[0] + " tent.";
+        attemptsList[0] + " " + tr.unit;
 
       $("max").textContent =
-        attemptsList[999] + " tent.";
+        attemptsList[999] + " " + tr.unit;
 
-
-      /*
-       * NOMBRE D'ITEMS FINISSANT À CHAQUE NIVEAU
-       */
 
       const finals = {
         22: 0,
@@ -1256,25 +1563,21 @@
       });
 
 
-      /*
-       * MESSAGE GLOBAL
-       */
-
       $("simmsg").innerHTML =
-        `<b style="color:#e4c57e">✦ 1 000 parcours terminés</b>` +
+        `<b style="color:#e4c57e">${tr.summaryTitle}</b>` +
         `<br><br>` +
 
-        `🎯 Moyenne : <b>${av.toFixed(2)} tentatives</b>` +
-        ` · 💰 Coût moyen : <b>` +
-        `${Math.round(ac).toLocaleString("fr-FR")} argent` +
-        ` (${(ac / 1000).toFixed(2)} or)</b>` +
+        `🎯 ${tr.summaryAvg} : <b>${av.toFixed(2)} ${tr.summaryAttempts}</b>` +
+        ` · 💰 ${tr.summaryCostAvg} : <b>` +
+        `${Math.round(ac).toLocaleString(tr.locale)} ${tr.currencyWord}` +
+        ` (${(ac / 1000).toFixed(2)} ${tr.goldWord})</b>` +
 
         `<br><br>` +
 
-        `📊 Médiane : <b>${md.toFixed(0)} tentatives</b>` +
-        ` · 💰 Coût médian : <b>` +
-        `${Math.round(mC).toLocaleString("fr-FR")} argent` +
-        ` (${(mC / 1000).toFixed(2)} or)</b>` +
+        `📊 ${tr.summaryMed} : <b>${md.toFixed(0)} ${tr.summaryAttempts}</b>` +
+        ` · 💰 ${tr.summaryCostMed} : <b>` +
+        `${Math.round(mC).toLocaleString(tr.locale)} ${tr.currencyWord}` +
+        ` (${(mC / 1000).toFixed(2)} ${tr.goldWord})</b>` +
 
         `<br><br>` +
 
@@ -1282,10 +1585,6 @@
         ` · +23 : <b>${finals[23]}</b>` +
         ` · +24 : <b>${finals[24]}</b>`;
 
-
-      /*
-       * TABLEAU
-       */
 
       $("results").innerHTML = r.map((x, i) =>
 
@@ -1297,7 +1596,7 @@
           </td>
 
           <td>
-            ${x.c.toLocaleString("fr-FR")} argent
+            ${x.c.toLocaleString(tr.locale)} ${tr.currencyWord}
           </td>
 
           <td>
@@ -1331,8 +1630,7 @@
 
         downgrades++;
 
-        $("message").textContent =
-          "Descente volontaire · 20 argent";
+        lastEvent = { type: "voluntaryDown" };
 
         update();
       }
@@ -1358,57 +1656,26 @@
 
 
     /*
+     * BASCULE DE LANGUE — ENGLISH MODE
+     */
+
+    $("langBtn").onclick = () => {
+
+      lang = lang === "fr" ? "en" : "fr";
+
+      applyStaticText();
+      update();
+      renderSimulation();
+    };
+
+
+    /*
      * INITIALISATION
      */
 
+    applyStaticText();
     update();
-
-
-    /*
-     * MUSIQUE
-     */
-
-    const bgMusic =
-      document.getElementById("bgMusic");
-
-    const musicBtn =
-      document.getElementById("musicBtn");
-
-
-    musicBtn.addEventListener("click", () => {
-
-      if (bgMusic.paused) {
-
-        bgMusic.play()
-          .then(() => {
-            musicBtn.textContent = "🔊 Musique";
-          })
-          .catch(() => {});
-
-      } else {
-
-        bgMusic.pause();
-
-        musicBtn.textContent = "🔇 Musique";
-      }
-    });
-
-
-    /*
-     * AUTOPLAY AU PREMIER CLIC
-     */
-
-    document.addEventListener(
-      "click",
-      () => {
-
-        if (bgMusic.paused) {
-          bgMusic.play().catch(() => {});
-        }
-
-      },
-      { once: true }
-    );
+    renderSimulation();
 
   </script>
 
