@@ -934,6 +934,7 @@
         costDowngradeValue: "20 argent",
         currencyWord: "argent",
         goldWord: "or",
+        forItemRange: "(Pour un item +22 à 24)",
         rulesHTML: `<b>Chances de réussite</b><br><br>
 
           +11 : <b>120%</b><br>
@@ -1028,6 +1029,7 @@
         costDowngradeValue: "20 silver",
         currencyWord: "silver",
         goldWord: "gold",
+        forItemRange: "(For a +22 to +24 item)",
         rulesHTML: `<b>Success chances</b><br><br>
 
           +11: <b>120%</b><br>
@@ -1149,6 +1151,34 @@
     let lastEvent = { type: "start" };
 
     let lastSim = null;
+
+    /*
+     * TRI DU TABLEAU DE SIMULATION
+     */
+
+    const sortKeys = {
+      thRun: "idx",
+      thAttempts: "a",
+      thCost: "c",
+      thFailures: "f",
+      thDowngrades: "d",
+      thFinal: "finalLevel"
+    };
+
+    let sortState = { key: null, dir: 1 };
+
+    function headerLabel(id, label) {
+
+      const key = sortKeys[id];
+
+      let arrow = "";
+
+      if (sortState.key === key) {
+        arrow = sortState.dir === 1 ? " ▲" : " ▼";
+      }
+
+      return label + arrow;
+    }
 
 
     /*
@@ -1309,12 +1339,12 @@
       $("minLabel").textContent = tr.minLabel;
       $("maxLabel").textContent = tr.maxLabel;
 
-      $("thRun").textContent = tr.thRun;
-      $("thAttempts").textContent = tr.thAttempts;
-      $("thCost").textContent = tr.thCost;
-      $("thFailures").textContent = tr.thFailures;
-      $("thDowngrades").textContent = tr.thDowngrades;
-      $("thFinal").textContent = tr.thFinal;
+      $("thRun").textContent = headerLabel("thRun", tr.thRun);
+      $("thAttempts").textContent = headerLabel("thAttempts", tr.thAttempts);
+      $("thCost").textContent = headerLabel("thCost", tr.thCost);
+      $("thFailures").textContent = headerLabel("thFailures", tr.thFailures);
+      $("thDowngrades").textContent = headerLabel("thDowngrades", tr.thDowngrades);
+      $("thFinal").textContent = headerLabel("thFinal", tr.thFinal);
 
       $("footerText").textContent = tr.footer;
 
@@ -1345,8 +1375,13 @@
 
       $("best").textContent = "+" + best;
 
-      $("liveCost").textContent =
-        cost.toLocaleString(tr.locale) + " 💰";
+      if (cost >= 1000) {
+        $("liveCost").textContent =
+          (cost / 1000).toFixed(3) + " 💰 " + tr.goldWord;
+      } else {
+        $("liveCost").textContent =
+          cost.toLocaleString(tr.locale) + " 💰 " + tr.currencyWord;
+      }
 
       $("failures").textContent = failures;
 
@@ -1533,7 +1568,7 @@
       lastSim = Array.from(
         { length: 1000 },
         one
-      );
+      ).map((x, i) => ({ ...x, idx: i + 1 }));
 
       renderSimulation();
     }
@@ -1598,27 +1633,31 @@
           costsList[500]) / 2;
 
 
-      $("avg").textContent =
-        av.toFixed(2) + " " + tr.unit;
+      $("avg").innerHTML =
+        av.toFixed(2) + " " + tr.unit +
+        `<br><small>${tr.forItemRange}</small>`;
 
       $("avgCost").innerHTML =
-        `${Math.round(ac).toLocaleString(tr.locale)} 💰` +
-        `<br><small>${(ac / 1000).toFixed(2)} 💰 ${tr.goldWord}</small>`;
+        `${(ac / 1000).toFixed(3)} 💰 ${tr.goldWord}` +
+        `<br><small>${tr.forItemRange}</small>`;
 
 
-      $("med").textContent =
-        md.toFixed(0) + " " + tr.unit;
+      $("med").innerHTML =
+        md.toFixed(0) + " " + tr.unit +
+        `<br><small>${tr.forItemRange}</small>`;
 
       $("medCost").innerHTML =
-        `${Math.round(mC).toLocaleString(tr.locale)} 💰` +
-        `<br><small>${(mC / 1000).toFixed(2)} 💰 ${tr.goldWord}</small>`;
+        `${(mC / 1000).toFixed(3)} 💰 ${tr.goldWord}` +
+        `<br><small>${tr.forItemRange}</small>`;
 
 
-      $("min").textContent =
-        attemptsList[0] + " " + tr.unit;
+      $("min").innerHTML =
+        attemptsList[0] + " " + tr.unit +
+        `<br><small>${tr.forItemRange}</small>`;
 
-      $("max").textContent =
-        attemptsList[999] + " " + tr.unit;
+      $("max").innerHTML =
+        attemptsList[999] + " " + tr.unit +
+        `<br><small>${tr.forItemRange}</small>`;
 
 
       const finals = {
@@ -1640,15 +1679,13 @@
 
         `🎯 ${tr.summaryAvg} : <b>${av.toFixed(2)} ${tr.summaryAttempts}</b>` +
         ` · 💰 ${tr.summaryCostAvg} : <b>` +
-        `${Math.round(ac).toLocaleString(tr.locale)} ${tr.currencyWord}` +
-        ` (${(ac / 1000).toFixed(2)} ${tr.goldWord})</b>` +
+        `${(ac / 1000).toFixed(3)} ${tr.goldWord}</b>` +
 
         `<br><br>` +
 
         `📊 ${tr.summaryMed} : <b>${md.toFixed(0)} ${tr.summaryAttempts}</b>` +
         ` · 💰 ${tr.summaryCostMed} : <b>` +
-        `${Math.round(mC).toLocaleString(tr.locale)} ${tr.currencyWord}` +
-        ` (${(mC / 1000).toFixed(2)} ${tr.goldWord})</b>` +
+        `${(mC / 1000).toFixed(3)} ${tr.goldWord}</b>` +
 
         `<br><br>` +
 
@@ -1657,17 +1694,26 @@
         ` · +24 : <b>${finals[24]}</b>`;
 
 
-      $("results").innerHTML = r.map((x, i) =>
+      let tableData = r;
+
+      if (sortState.key) {
+
+        tableData = [...r].sort(
+          (a, b) => (a[sortState.key] - b[sortState.key]) * sortState.dir
+        );
+      }
+
+      $("results").innerHTML = tableData.map(x =>
 
         `<tr>
-          <td>#${i + 1}</td>
+          <td>#${x.idx}</td>
 
           <td>
             ${x.a}
           </td>
 
           <td>
-            ${x.c.toLocaleString(tr.locale)} ${tr.currencyWord}
+            ${Math.floor(x.c / 1000)} ${tr.goldWord}
           </td>
 
           <td>
@@ -1738,6 +1784,34 @@
       update();
       renderSimulation();
     };
+
+
+    /*
+     * TRI AU CLIC SUR LES EN-TÊTES
+     */
+
+    Object.keys(sortKeys).forEach(id => {
+
+      const el = $(id);
+
+      el.style.cursor = "pointer";
+      el.style.userSelect = "none";
+
+      el.addEventListener("click", () => {
+
+        const key = sortKeys[id];
+
+        if (sortState.key === key) {
+          sortState.dir *= -1;
+        } else {
+          sortState.key = key;
+          sortState.dir = 1;
+        }
+
+        applyStaticText();
+        renderSimulation();
+      });
+    });
 
 
     /*
