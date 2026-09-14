@@ -1653,7 +1653,11 @@
 
     function simDataAsObjects() {
 
-      return lastSim.map(x => ({
+      const source = finalFilter === "all"
+        ? lastSim
+        : lastSim.filter(x => x.finalLevel === Number(finalFilter));
+
+      return source.map(x => ({
         run: x.idx,
         attempts: x.a,
         cost_silver: x.c,
@@ -1670,6 +1674,8 @@
 
       const rows = simDataAsObjects();
 
+      if (rows.length === 0) return;
+
       const header = Object.keys(rows[0]);
 
       const lines = [
@@ -1677,8 +1683,10 @@
         ...rows.map(row => header.map(k => row[k]).join(","))
       ];
 
+      const suffix = finalFilter === "all" ? "all" : "+" + finalFilter;
+
       downloadFile(
-        "forge-simulation.csv",
+        `forge-simulation-${suffix}.csv`,
         lines.join("\n"),
         "text/csv;charset=utf-8;"
       );
@@ -1688,12 +1696,19 @@
 
       if (!lastSim) return;
 
+      const rows = simDataAsObjects();
+
+      if (rows.length === 0) return;
+
+      const suffix = finalFilter === "all" ? "all" : "+" + finalFilter;
+
       downloadFile(
-        "forge-simulation.json",
-        JSON.stringify(simDataAsObjects(), null, 2),
+        `forge-simulation-${suffix}.json`,
+        JSON.stringify(rows, null, 2),
         "application/json;charset=utf-8;"
       );
     }
+
 
 
     /*
