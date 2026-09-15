@@ -678,7 +678,7 @@
     <h1 id="mainTitle">Forge ton item</h1>
 
     <p class="sub" id="subText">
-      Atteins <b>+22</b> avec un maximum possible de <b>+24</b>.
+      Atteins <b>+20</b> ou <b>+22</b> avec un maximum possible de <b>+24</b>.
     </p>
   </header>
 
@@ -691,7 +691,7 @@
         <div class="item">
           <div class="itemname" id="itemNameLabel">Équipement</div>
           <div class="level" id="level">+11</div>
-          <div class="goal" id="goalLabel">Arrêt · +22 à +24</div>
+          <div class="goal" id="goalLabel">Arrêt · +20, +22 à +24</div>
         </div>
 
         <div class="chance">
@@ -792,10 +792,9 @@
           +17 : <b>14%</b><br>
           +18 : <b>7%</b><br>
           +19 : <b>2%</b><br>
-          +20 : <b>1%</b><br>
           +21 : <b>1,6%</b><br><br>
 
-          À <b>+22</b>, <b>+23</b> ou <b>+24</b> :
+          À <b>+20</b>, <b>+22</b>, <b>+23</b> ou <b>+24</b> :
           la forge s'arrête immédiatement.
 
           <br><br>
@@ -825,7 +824,7 @@
       <p class="desc" id="simDesc">
         1 000 parcours indépendants commencent à +11.
         Chaque parcours continue à tenter les améliorations jusqu'à
-        atteindre +22, +23 ou +24.
+        atteindre +20, +22, +23 ou +24.
       </p>
 
       <button class="primary" id="simulate">
@@ -836,8 +835,9 @@
         Filtrer les résultats par niveau final
       </p>
 
-      <div class="actions" id="filterRow" style="grid-template-columns: repeat(4, 1fr); margin-top:6px; margin-bottom:16px;">
+      <div class="actions" id="filterRow" style="grid-template-columns: repeat(5, 1fr); margin-top:6px; margin-bottom:16px;">
         <button class="primary" id="filterAllBtn" data-filter="all">Tous</button>
+        <button class="secondary" id="filter20Btn" data-filter="20">+20</button>
         <button class="secondary" id="filter22Btn" data-filter="22">+22</button>
         <button class="secondary" id="filter23Btn" data-filter="23">+23</button>
         <button class="secondary" id="filter24Btn" data-filter="24">+24</button>
@@ -932,9 +932,9 @@
       fr: {
         pill: "✦ Forge · équipement · amélioration",
         title: "Forge ton item",
-        subText: "Atteins <b>+22</b> avec un maximum possible de <b>+24</b>.",
+        subText: "Atteins <b>+20</b> ou <b>+22</b> avec un maximum possible de <b>+24</b>.",
         itemName: "Équipement",
-        goal: "Arrêt · +22 à +24",
+        goal: "Arrêt · +20, +22 à +24",
         chanceLabel: "Chance actuelle",
         stop: "ARRÊT",
         attemptBtn: "⚒ Tenter l'amélioration",
@@ -951,15 +951,16 @@
         costFailureLabel: "Échec",
         costDowngradeLabel: "Baisse automatique",
         costAttemptValue: "50 argent",
-        costFailureValue: "140 argent",
+        costFailureValue: "190 argent",
         costDowngradeValue: "20 argent",
         currencyWord: "argent",
         goldWord: "or",
-        forItemRange: "(Pour un item +22 à 24)",
+        forItemRange: "(Pour un item +20 à 24)",
         downloadCsvBtn: "⬇ Télécharger CSV",
         downloadJsonBtn: "⬇ Télécharger JSON",
         filterLabel: "Filtrer les résultats par niveau final",
         filterAll: "Tous",
+        filter20: "+20",
         filter22: "+22",
         filter23: "+23",
         filter24: "+24",
@@ -976,10 +977,9 @@
           +17 : <b>14%</b><br>
           +18 : <b>7%</b><br>
           +19 : <b>2%</b><br>
-          +20 : <b>1%</b><br>
           +21 : <b>1,6%</b><br><br>
 
-          À <b>+22</b>, <b>+23</b> ou <b>+24</b> :
+          À <b>+20</b>, <b>+22</b>, <b>+23</b> ou <b>+24</b> :
           la forge s'arrête immédiatement.
 
           <br><br>
@@ -996,7 +996,7 @@
 
           💰 <b>1 or = 1 000 argent</b>`,
         simTitle: "Simulation × 1 000",
-        simDesc: "1 000 parcours indépendants commencent à +11. Chaque parcours continue à tenter les améliorations jusqu'à atteindre +22, +23 ou +24.",
+        simDesc: "1 000 parcours indépendants commencent à +11. Chaque parcours continue à tenter les améliorations jusqu'à atteindre +20, +22, +23 ou +24.",
         simulateBtn: "⚔ Lancer 1 000 simulations",
         avgLabel: "🎯 Tentatives moyennes",
         avgCostLabel: "💰 Coût moyen",
@@ -1036,9 +1036,9 @@
       en: {
         pill: "✦ Forge · gear · upgrade",
         title: "Forge your item",
-        subText: "Reach <b>+22</b> with a maximum possible of <b>+24</b>.",
+        subText: "Reach <b>+20</b> or <b>+22</b> with a maximum possible of <b>+24</b>.",
         itemName: "Gear",
-        goal: "Stop · +22 to +24",
+        goal: "Stop · +20, +22 to +24",
         chanceLabel: "Current chance",
         stop: "STOP",
         attemptBtn: "⚒ Attempt upgrade",
@@ -1055,15 +1055,16 @@
         costFailureLabel: "Failure",
         costDowngradeLabel: "Automatic downgrade",
         costAttemptValue: "50 silver",
-        costFailureValue: "140 silver",
+        costFailureValue: "190 silver",
         costDowngradeValue: "20 silver",
         currencyWord: "silver",
         goldWord: "gold",
-        forItemRange: "(For a +22 to +24 item)",
+        forItemRange: "(For a +20 to +24 item)",
         downloadCsvBtn: "⬇ Download CSV",
         downloadJsonBtn: "⬇ Download JSON",
         filterLabel: "Filter results by final level",
         filterAll: "All",
+        filter20: "+20",
         filter22: "+22",
         filter23: "+23",
         filter24: "+24",
@@ -1080,10 +1081,9 @@
           +17: <b>14%</b><br>
           +18: <b>7%</b><br>
           +19: <b>2%</b><br>
-          +20: <b>1%</b><br>
           +21: <b>1.6%</b><br><br>
 
-          At <b>+22</b>, <b>+23</b> or <b>+24</b>:
+          At <b>+20</b>, <b>+22</b>, <b>+23</b> or <b>+24</b>:
           the forge stops immediately.
 
           <br><br>
@@ -1100,7 +1100,7 @@
 
           💰 <b>1 gold = 1,000 silver</b>`,
         simTitle: "Simulation × 1,000",
-        simDesc: "1,000 independent runs start at +11. Each run keeps attempting upgrades until it reaches +22, +23, or +24.",
+        simDesc: "1,000 independent runs start at +11. Each run keeps attempting upgrades until it reaches +20, +22, +23, or +24.",
         simulateBtn: "⚔ Run 1,000 simulations",
         avgLabel: "🎯 Average attempts",
         avgCostLabel: "💰 Average cost",
@@ -1235,7 +1235,7 @@
 
 
     function isFinished(lvl) {
-      return lvl >= STOP_LEVEL;
+      return lvl === 20 || lvl >= STOP_LEVEL;
     }
 
 
@@ -1394,6 +1394,7 @@
 
       $("filterLabelText").textContent = tr.filterLabel;
       $("filterAllBtn").textContent = tr.filterAll;
+      $("filter20Btn").textContent = tr.filter20;
       $("filter22Btn").textContent = tr.filter22;
       $("filter23Btn").textContent = tr.filter23;
       $("filter24Btn").textContent = tr.filter24;
@@ -1439,7 +1440,7 @@
 
       $("downgrade").disabled = level <= START_LEVEL;
 
-      if (level === 22 || level === 23 || level === 24) {
+      if (level === 20 || level === 22 || level === 23 || level === 24) {
 
         $("message").innerHTML =
           `<b style='color:#63cf8f'>${tr.finishedText(level)}</b>`;
@@ -1754,6 +1755,7 @@
 
 
       const finals = {
+        20: 0,
         22: 0,
         23: 0,
         24: 0
@@ -1782,7 +1784,8 @@
           `<br><br>` +
           tr.noMatch +
           `<br><br>` +
-          `🏆 +22 : <b>${finals[22]}</b>` +
+          `🏆 +20 : <b>${finals[20]}</b>` +
+          ` · +22 : <b>${finals[22]}</b>` +
           ` · +23 : <b>${finals[23]}</b>` +
           ` · +24 : <b>${finals[24]}</b>`;
 
@@ -1864,7 +1867,8 @@
 
         `<br><br>` +
 
-        `🏆 +22 : <b>${finals[22]}</b>` +
+        `🏆 +20 : <b>${finals[20]}</b>` +
+        ` · +22 : <b>${finals[22]}</b>` +
         ` · +23 : <b>${finals[23]}</b>` +
         ` · +24 : <b>${finals[24]}</b>`;
 
@@ -1953,7 +1957,7 @@
 
       finalFilter = value;
 
-      ["filterAllBtn", "filter22Btn", "filter23Btn", "filter24Btn"].forEach(id => {
+      ["filterAllBtn", "filter20Btn", "filter22Btn", "filter23Btn", "filter24Btn"].forEach(id => {
 
         const isActive = $(id).dataset.filter === value;
 
@@ -1965,6 +1969,7 @@
     }
 
     $("filterAllBtn").onclick = () => setFinalFilter("all");
+    $("filter20Btn").onclick = () => setFinalFilter("20");
     $("filter22Btn").onclick = () => setFinalFilter("22");
     $("filter23Btn").onclick = () => setFinalFilter("23");
     $("filter24Btn").onclick = () => setFinalFilter("24");
