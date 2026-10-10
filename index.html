@@ -470,6 +470,34 @@
       color: #6b4307;
     }
 
+    /* ===== COMPTEUR D'OBJETS ===== */
+
+    .usetitle {
+      margin: 16px 0 0;
+      color: #b59c75;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+
+    .stat .usecost {
+      display: block;
+      margin-top: 3px;
+      color: #998368;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .calcHero .heroUse {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #5d463066;
+      color: #d0b88b;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
     /* ===== PRIX MODIFIABLES ===== */
 
     .priceinput {
@@ -750,6 +778,31 @@
             <b id="failures">0</b>
           </div>
         </div>
+
+        <p class="usetitle" id="useTitle">Objets utilisés</p>
+
+        <div class="stats" style="margin-top:8px;">
+          <div class="stat">
+            <small id="useFormulaLabel">📜 Formules</small>
+            <b id="useFormula">0</b>
+            <span class="usecost" id="useFormulaCost"></span>
+          </div>
+          <div class="stat">
+            <small id="usePotionLabel">🧪 Potions de chance</small>
+            <b id="usePotion">0</b>
+            <span class="usecost" id="usePotionCost"></span>
+          </div>
+          <div class="stat">
+            <small id="useDyeLabel">🎨 Teintures</small>
+            <b id="useDye">0</b>
+            <span class="usecost" id="useDyeCost"></span>
+          </div>
+          <div class="stat">
+            <small id="useDownLabel">⬇️ Baisses de niveau</small>
+            <b id="useDown">0</b>
+            <span class="usecost" id="useDownCost"></span>
+          </div>
+        </div>
       </div>
 
       <aside class="card">
@@ -842,6 +895,7 @@
         <div class="heroLabel" id="heroLabel">Choisis un niveau</div>
         <div class="heroValue" id="heroValue">—</div>
         <div class="heroDetail" id="heroDetail"></div>
+        <div class="heroUse" id="heroUse" style="display:none;"></div>
       </div>
 
       <div class="bigstats">
@@ -1020,6 +1074,10 @@
      * TRADUCTIONS / TRANSLATIONS
      */
 
+    // nombre arrondi, formaté selon la langue
+    const nf = (v, loc) => Math.round(v).toLocaleString(loc);
+    const pl = (v, word, plural) => Math.round(v) > 1 ? plural : word;
+
     const rulesFR = () => `<b>Chances de réussite</b><br><br>
           +11 : <b>120%</b><br>
           +12 : <b>40%</b><br>
@@ -1163,7 +1221,22 @@
         calcMinLabel: "🍀 Moins cher",
         calcMaxLabel: "💀 Plus cher",
         calcAttLabel: "🎯 Tentatives moyennes",
-        calcItemsLabel: "🔁 Items utilisés (moyenne)"
+        calcItemsLabel: "🔁 Items utilisés (moyenne)",
+
+        // compteur d'objets
+        useTitle: "Objets utilisés",
+        useFormulaLabel: "📜 Formules",
+        usePotionLabel: "🧪 Potions de chance",
+        useDyeLabel: "🎨 Teintures",
+        useDownLabel: "⬇️ Baisses de niveau",
+        cons: (a, f, d) =>
+          `📜 <b>${nf(a, "fr-FR")}</b> ${pl(a, "formule", "formules")} · ` +
+          `🧪 <b>${nf(a, "fr-FR")}</b> ${pl(a, "potion", "potions")} · ` +
+          `🎨 <b>${nf(f, "fr-FR")}</b> ${pl(f, "teinture", "teintures")} · ` +
+          `⬇️ <b>${nf(d, "fr-FR")}</b> ${pl(d, "baisse", "baisses")}`,
+        consThisRun: "Ce parcours a utilisé :",
+        consAverage: "En moyenne :",
+        consSimAvg: "🧾 Objets utilisés en moyenne par parcours :"
       },
 
       en: {
@@ -1258,7 +1331,21 @@
         calcMinLabel: "🍀 Cheapest",
         calcMaxLabel: "💀 Most expensive",
         calcAttLabel: "🎯 Average attempts",
-        calcItemsLabel: "🔁 Items used (average)"
+        calcItemsLabel: "🔁 Items used (average)",
+
+        useTitle: "Items consumed",
+        useFormulaLabel: "📜 Formulas",
+        usePotionLabel: "🧪 Luck potions",
+        useDyeLabel: "🎨 Dyes",
+        useDownLabel: "⬇️ Level downgrades",
+        cons: (a, f, d) =>
+          `📜 <b>${nf(a, "en-US")}</b> ${pl(a, "formula", "formulas")} · ` +
+          `🧪 <b>${nf(a, "en-US")}</b> ${pl(a, "potion", "potions")} · ` +
+          `🎨 <b>${nf(f, "en-US")}</b> ${pl(f, "dye", "dyes")} · ` +
+          `⬇️ <b>${nf(d, "en-US")}</b> ${pl(d, "downgrade", "downgrades")}`,
+        consThisRun: "This run used:",
+        consAverage: "On average:",
+        consSimAvg: "🧾 Average items consumed per run:"
       }
     };
 
@@ -1476,6 +1563,9 @@
       $("calcAttLabel").textContent = tr.calcAttLabel;
       $("calcItemsLabel").textContent = tr.calcItemsLabel;
 
+      ["useTitle", "useFormulaLabel", "usePotionLabel", "useDyeLabel", "useDownLabel"]
+        .forEach(id => $(id).textContent = tr[id]);
+
       $("simTitle").textContent = tr.simTitle;
       $("simDesc").textContent = tr.simDesc;
       $("simulate").textContent = tr.simulateBtn;
@@ -1534,6 +1624,17 @@
       }
 
       $("failures").textContent = failures;
+
+      // compteur d'objets (formule + potion à chaque essai, teinture à chaque échec)
+      const silverTxt = v => v.toLocaleString(tr.locale) + " " + tr.currencyWord;
+      $("useFormula").textContent = totalAttempts.toLocaleString(tr.locale);
+      $("usePotion").textContent = totalAttempts.toLocaleString(tr.locale);
+      $("useDye").textContent = failures.toLocaleString(tr.locale);
+      $("useDown").textContent = downgrades.toLocaleString(tr.locale);
+      $("useFormulaCost").textContent = silverTxt(totalAttempts * prices.formula);
+      $("usePotionCost").textContent = silverTxt(totalAttempts * prices.potion);
+      $("useDyeCost").textContent = silverTxt(failures * prices.dye);
+      $("useDownCost").textContent = silverTxt(downgrades * prices.down);
 
       $("attempt").disabled = isFinished(level);
       $("downgrade").disabled = level <= START_LEVEL;
@@ -1699,10 +1800,12 @@
         $("heroLabel").textContent = tr.heroIdle;
         $("heroValue").textContent = "—";
         $("heroDetail").textContent = "";
+        $("heroUse").style.display = "none";
         return;
       }
 
       if (lastCalc.running) {
+        $("heroUse").style.display = "none";
         $("heroLabel").textContent = tr.heroRunning(lastCalc.target);
         $("heroValue").textContent = "…";
         $("heroDetail").textContent = "";
@@ -1732,6 +1835,14 @@
         avgAtt.toLocaleString(tr.locale, { maximumFractionDigits: 0 }) + " " + tr.unit;
       $("calcItems").textContent =
         Math.round(avgItems).toLocaleString(tr.locale);
+
+      const avgF = results.reduce((s, x) => s + x.f, 0) / n;
+      const avgD = results.reduce((s, x) => s + x.d, 0) / n;
+
+      $("heroUse").style.display = "block";
+      $("heroUse").innerHTML =
+        `${tr.consThisRun} ${tr.cons(r1.a, r1.f, r1.d)}<br>` +
+        `${tr.consAverage} ${tr.cons(avgAtt, avgF, avgD)}`;
     }
 
     targetButtons.forEach(b => {
@@ -1896,6 +2007,13 @@
         `<br><br>` +
         `📊 ${tr.summaryMed} : <b>${Math.round(md).toLocaleString(tr.locale)} ${tr.summaryAttempts}</b>` +
         ` · 💰 ${tr.summaryCostMed} : <b>${fmtGold(mC)}</b>` +
+        `<br><br>` +
+        `${tr.consSimAvg}<br>` +
+        tr.cons(
+          av,
+          r.reduce((s, x) => s + x.f, 0) / r.length,
+          r.reduce((s, x) => s + x.d, 0) / r.length
+        ) +
         `<br><br>` + finalsLine;
 
       let tableData = r;
