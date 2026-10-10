@@ -1271,8 +1271,8 @@
         thFormulas: "📜 Formules",
         thPotions: "🧪 Potions",
         thDyes: "🎨 Teintures",
-        pctHelp: "% de chance de faire aussi bien ou mieux (coûter autant ou moins cher) que ce parcours",
-        pctNote: "🍀 Colonne Chance : % de chance de faire aussi bien ou mieux que ce parcours (coûter autant ou moins cher).",
+        pctHelp: "Chance du parcours : 100 % = le plus chanceux, 0 % = le plus malchanceux",
+        pctNote: "🍀 Colonne Chance : plus c'est haut, plus le parcours a été chanceux. 95 % = il a coûté moins cher que 95 % des parcours. 2 % = presque tous ont fait mieux que lui.",
         simItemsAvg: "🔁 Items utilisés en moyenne",
         simItemsNote: "(un item bloqué à +22 ou +23 avant l'objectif oblige à repartir d'un nouvel item à +11)",
         simFinals: "🏆 Niveau final",
@@ -1389,8 +1389,8 @@
         thFormulas: "📜 Formulas",
         thPotions: "🧪 Potions",
         thDyes: "🎨 Dyes",
-        pctHelp: "% chance of doing as well or better (costing the same or less) than this run",
-        pctNote: "🍀 Chance column: % chance of doing as well or better than this run (costing the same or less).",
+        pctHelp: "Run luck: 100% = luckiest, 0% = unluckiest",
+        pctNote: "🍀 Chance column: the higher, the luckier the run. 95% = it cost less than 95% of runs. 2% = almost every run did better.",
         simItemsAvg: "🔁 Average items used",
         simItemsNote: "(an item stuck at +22 or +23 before the target forces a restart with a new item at +11)",
         simFinals: "🏆 Final level",
@@ -2145,9 +2145,11 @@
         let lo = 0, hi = n;
         while (lo < hi) {
           const mid = (lo + hi) >> 1;
-          if (costsList[mid] <= x.c) lo = mid + 1; else hi = mid;
+          if (costsList[mid] < x.c) lo = mid + 1; else hi = mid;
         }
-        x.pct = lo / n * 100;
+        // chance = part des parcours qui ont coûté autant ou PLUS cher
+        // (100 % = le plus chanceux, proche de 0 % = le plus malchanceux)
+        x.pct = (n - lo) / n * 100;
       });
       const pctTxt = v => v < 1 ? "<1 %" : Math.round(v) + " %";
 
@@ -2194,7 +2196,7 @@
           <td style="text-align:left;">#${x.idx}</td>
           <td>${nf(x.a, L)}</td>
           <td>${fmtGold(x.c)}</td>
-          <td><b style="color:${x.pct <= 10 ? "#63cf8f" : x.pct >= 90 ? "#e05a43" : "#e2c37d"}">${pctTxt(x.pct)}</b></td>
+          <td><b style="color:${x.pct >= 90 ? "#63cf8f" : x.pct <= 10 ? "#e05a43" : "#e2c37d"}">${pctTxt(x.pct)}</b></td>
           <td>${nf(x.f, L)}</td>
           <td>${nf(x.a, L)}</td>
           <td>${nf(x.a, L)}</td>
