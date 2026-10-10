@@ -470,6 +470,67 @@
       color: #6b4307;
     }
 
+    /* ===== PRIX MODIFIABLES ===== */
+
+    .priceinput {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .priceinput input {
+      width: 92px;
+      padding: 8px 10px;
+      border: 1px solid #84542d;
+      border-radius: 4px;
+      background: #120d0b;
+      color: #f0cf75;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 17px;
+      font-weight: 700;
+      text-align: right;
+      box-shadow: inset 0 2px 6px #000a;
+    }
+
+    .priceinput input:focus {
+      outline: none;
+      border-color: #f0cf75;
+      box-shadow: inset 0 2px 6px #000a, 0 0 0 2px #d6a84a44;
+    }
+
+    .priceCur {
+      color: #a99578;
+      font-size: 13px;
+      min-width: 44px;
+    }
+
+    .costsum {
+      display: grid;
+      gap: 9px;
+      margin-top: 12px;
+      padding: 13px 14px;
+      border: 1px solid #9c6b38;
+      border-radius: 4px;
+      background:
+        radial-gradient(circle at 50% 0, #e64b2018, transparent 70%),
+        linear-gradient(180deg, #30251ce8, #140f0ce8);
+    }
+
+    .costsum div {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      color: #c4ad82;
+      font-size: 13px;
+    }
+
+    .costsum b {
+      color: #f3c95e;
+      font-size: 18px;
+      white-space: nowrap;
+    }
+
     .rules {
       margin-top: 12px;
       padding: 14px;
@@ -701,27 +762,54 @@
 
         <div class="cost">
           <div class="costleft">
-            <span class="coin silver">💰</span>
-            <span id="costAttemptLabel">Tentative réussie</span>
+            <span class="coin silver">🎨</span>
+            <span id="lblDye">Teinture</span>
           </div>
-          <b id="costAttemptValue">55 argent</b>
+          <label class="priceinput">
+            <input type="number" id="priceDye" min="0" step="1" value="167" inputmode="numeric">
+            <span class="priceCur">argent</span>
+          </label>
         </div>
 
         <div class="cost">
           <div class="costleft">
-            <span class="coin silver">💰</span>
-            <span id="costFailureLabel">Tentative ratée</span>
+            <span class="coin silver">📜</span>
+            <span id="lblFormula">Formule</span>
           </div>
-          <b id="costFailureValue">185 argent</b>
+          <label class="priceinput">
+            <input type="number" id="priceFormula" min="0" step="1" value="26" inputmode="numeric">
+            <span class="priceCur">argent</span>
+          </label>
         </div>
 
         <div class="cost">
           <div class="costleft">
-            <span class="coin gold">💰</span>
-            <span id="costDowngradeLabel">Baisse automatique</span>
+            <span class="coin silver">🧪</span>
+            <span id="lblPotion">Potion de chance</span>
           </div>
-          <b id="costDowngradeValue">20 argent</b>
+          <label class="priceinput">
+            <input type="number" id="pricePotion" min="0" step="1" value="38" inputmode="numeric">
+            <span class="priceCur">argent</span>
+          </label>
         </div>
+
+        <div class="cost">
+          <div class="costleft">
+            <span class="coin gold">⬇️</span>
+            <span id="lblDown">Baisser d'un niveau</span>
+          </div>
+          <label class="priceinput">
+            <input type="number" id="priceDown" min="0" step="1" value="20" inputmode="numeric">
+            <span class="priceCur">argent</span>
+          </label>
+        </div>
+
+        <div class="costsum">
+          <div><span id="sumAttemptLabel">Un essai (formule + potion)</span><b id="sumAttempt">—</b></div>
+          <div><span id="sumFailLabel">Un échec (essai + teinture)</span><b id="sumFail">—</b></div>
+        </div>
+
+        <button class="dark full" id="resetPrices">↺ Prix par défaut</button>
 
         <div class="rules" id="rulesBlock"></div>
 
@@ -870,14 +958,35 @@
 
     /*
      * CONFIGURATION DES COÛTS
-     *   Tentative réussie : A                     = 55 argent
-     *   Tentative ratée   : A + F = 55 + 130      = 185 argent
-     *   Baisse (auto ou volontaire) : D           = 20 argent
+     *   Essai  : A = formule + potion de chance
+     *   Échec  : A + F (F = une teinture)
+     *   Baisse (auto ou volontaire) : D
      */
 
-    const A = 55;
-    const F = 130;
-    const D = 20;
+    // prix des objets (modifiables depuis la page, sauvegardés dans le navigateur)
+    const DEFAULT_PRICES = { dye: 167, formula: 26, potion: 38, down: 20 };
+
+    let prices = { ...DEFAULT_PRICES };
+
+    try {
+      const saved = JSON.parse(localStorage.getItem("forgePrices"));
+      if (saved) {
+        Object.keys(DEFAULT_PRICES).forEach(k => {
+          if (Number.isFinite(saved[k]) && saved[k] >= 0) prices[k] = saved[k];
+        });
+      }
+    } catch (e) {}
+
+    // A = un essai (formule + potion) · F = en plus si échec (teinture) · D = baisse
+    let A, F, D;
+
+    function computeCosts() {
+      A = prices.formula + prices.potion;
+      F = prices.dye;
+      D = prices.down;
+    }
+
+    computeCosts();
 
     const START_LEVEL = 11;
     const STOP_LEVEL = 22;
@@ -911,7 +1020,7 @@
      * TRADUCTIONS / TRANSLATIONS
      */
 
-    const rulesFR = `<b>Chances de réussite</b><br><br>
+    const rulesFR = () => `<b>Chances de réussite</b><br><br>
           +11 : <b>120%</b><br>
           +12 : <b>40%</b><br>
           +13 : <b>70%</b><br>
@@ -925,16 +1034,17 @@
           À <b>+20</b>, <b>+22</b>, <b>+23</b> ou <b>+24</b> :
           la forge s'arrête immédiatement.
           <br><br>
-          <b>Réussite = ${A} argent</b>.<br>
-          <b>Échec = ${A + F} argent</b> au total :
-          ${A} argent de tentative + ${F} argent d'échec.
+          <b>Un essai = ${A} argent</b> :
+          1 formule (${prices.formula}) + 1 potion de chance (${prices.potion}).<br>
+          <b>Un échec = ${A + F} argent</b> au total :
+          l'essai + 1 teinture (${F}).
           <br><br>
           À <b>+12</b>, <b>+16</b> et <b>+19</b> :
           baisse automatique de 1 niveau. (coût ${D} argent)
           <br><br>
           💰 <b>1 or = 1 000 argent</b>`;
 
-    const rulesEN = `<b>Success chances</b><br><br>
+    const rulesEN = () => `<b>Success chances</b><br><br>
           +11: <b>120%</b><br>
           +12: <b>40%</b><br>
           +13: <b>70%</b><br>
@@ -948,9 +1058,10 @@
           At <b>+20</b>, <b>+22</b>, <b>+23</b> or <b>+24</b>:
           the forge stops immediately.
           <br><br>
-          <b>Success = ${A} silver</b>.<br>
-          <b>Failure = ${A + F} silver</b> total:
-          ${A} silver attempt fee + ${F} silver failure fee.
+          <b>One attempt = ${A} silver</b>:
+          1 formula (${prices.formula}) + 1 luck potion (${prices.potion}).<br>
+          <b>One failure = ${A + F} silver</b> total:
+          the attempt + 1 dye (${F}).
           <br><br>
           At <b>+12</b>, <b>+16</b> and <b>+19</b>:
           automatic downgrade of 1 level. (cost ${D} silver)
@@ -976,13 +1087,14 @@
         statCost: "Coût",
         statFailures: "Échecs",
         economyTitle: "Économie",
-        economyDesc: "Les coûts du système de forge sont comptabilisés pour chaque tentative et chaque événement.",
-        costAttemptLabel: "Tentative réussie",
-        costFailureLabel: "Tentative ratée",
-        costDowngradeLabel: "Baisse automatique",
-        costAttemptValue: `${A} argent`,
-        costFailureValue: `${A + F} argent`,
-        costDowngradeValue: `${D} argent`,
+        economyDesc: "Modifie les prix ci-dessous : tous les coûts (forge, calculateur, simulation) se mettent à jour tout de suite.",
+        lblDye: "Teinture",
+        lblFormula: "Formule",
+        lblPotion: "Potion de chance",
+        lblDown: "Baisser d'un niveau",
+        sumAttemptLabel: "Un essai (formule + potion)",
+        sumFailLabel: "Un échec (essai + teinture)",
+        resetPricesBtn: "↺ Prix par défaut",
         currencyWord: "argent",
         goldWord: "or",
         forItemRange: "(Tous les parcours)",
@@ -1035,7 +1147,7 @@
         successMsg: (o, n) => `Réussi ! +${o} → +${n} · ${A} argent`,
         successDownMsg: (o, n) => `Réussi ! +${o} → +${n} · Baisse automatique · ${A + D} argent`,
         failMsg: (o, n) => `Échec ! +${o} → +${n} · ${A + F} argent`,
-        voluntaryDownMsg: `Descente volontaire · ${D} argent`,
+        voluntaryDownMsg: () => `Descente volontaire · ${D} argent`,
 
         // calculateur
         calcTitle: "Combien coûte un item ?",
@@ -1071,13 +1183,14 @@
         statCost: "Cost",
         statFailures: "Failures",
         economyTitle: "Economy",
-        economyDesc: "The forge system's costs are tracked for every attempt and every event.",
-        costAttemptLabel: "Successful attempt",
-        costFailureLabel: "Failed attempt",
-        costDowngradeLabel: "Automatic downgrade",
-        costAttemptValue: `${A} silver`,
-        costFailureValue: `${A + F} silver`,
-        costDowngradeValue: `${D} silver`,
+        economyDesc: "Edit the prices below: every cost (forge, calculator, simulation) updates instantly.",
+        lblDye: "Dye",
+        lblFormula: "Formula",
+        lblPotion: "Luck potion",
+        lblDown: "Downgrade one level",
+        sumAttemptLabel: "One attempt (formula + potion)",
+        sumFailLabel: "One failure (attempt + dye)",
+        resetPricesBtn: "↺ Default prices",
         currencyWord: "silver",
         goldWord: "gold",
         forItemRange: "(All runs)",
@@ -1130,7 +1243,7 @@
         successMsg: (o, n) => `Success! +${o} → +${n} · ${A} silver`,
         successDownMsg: (o, n) => `Success! +${o} → +${n} · Automatic downgrade · ${A + D} silver`,
         failMsg: (o, n) => `Failure! +${o} → +${n} · ${A + F} silver`,
-        voluntaryDownMsg: `Voluntary downgrade · ${D} silver`,
+        voluntaryDownMsg: () => `Voluntary downgrade · ${D} silver`,
 
         calcTitle: "How much does an item cost?",
         calcDesc: `Click a level: forging starts at +11 and keeps going until it reaches that level (or higher). If the item lands on a level with no rate (+22 or +23) before the target, it's stuck: a new item is started at +11 and the silver already spent is kept. Averages use ${CALC_RUNS.toLocaleString("en-US")} runs.`,
@@ -1158,6 +1271,7 @@
 
     let level = START_LEVEL;
     let attempts = 0;
+    let totalAttempts = 0;
     let best = START_LEVEL;
     let cost = 0;
     let failures = 0;
@@ -1308,7 +1422,7 @@
         case "success": return tr.successMsg(lastEvent.old, lastEvent.new);
         case "successDowngrade": return tr.successDownMsg(lastEvent.old, lastEvent.new);
         case "fail": return tr.failMsg(lastEvent.old, lastEvent.new);
-        case "voluntaryDown": return tr.voluntaryDownMsg;
+        case "voluntaryDown": return tr.voluntaryDownMsg();
         case "start":
         default: return tr.defaultMessage;
       }
@@ -1347,15 +1461,11 @@
       $("economyTitle").textContent = tr.economyTitle;
       $("economyDesc").textContent = tr.economyDesc;
 
-      $("costAttemptLabel").textContent = tr.costAttemptLabel;
-      $("costFailureLabel").textContent = tr.costFailureLabel;
-      $("costDowngradeLabel").textContent = tr.costDowngradeLabel;
+      ["lblDye", "lblFormula", "lblPotion", "lblDown", "sumAttemptLabel", "sumFailLabel"]
+        .forEach(id => $(id).textContent = tr[id]);
+      $("resetPrices").textContent = tr.resetPricesBtn;
 
-      $("costAttemptValue").textContent = tr.costAttemptValue;
-      $("costFailureValue").textContent = tr.costFailureValue;
-      $("costDowngradeValue").textContent = tr.costDowngradeValue;
-
-      $("rulesBlock").innerHTML = tr.rulesHTML;
+      applyPriceText();
 
       $("calcTitle").textContent = tr.calcTitle;
       $("calcDesc").textContent = tr.calcDesc;
@@ -1446,6 +1556,7 @@
       if (isFinished(level)) return;
 
       attempts++;
+      totalAttempts++;
 
       const old = level;
       const step = forgeStep(level);
@@ -1472,6 +1583,7 @@
     function reset() {
       level = START_LEVEL;
       attempts = 0;
+      totalAttempts = 0;
       best = START_LEVEL;
       cost = 0;
       failures = 0;
@@ -1891,8 +2003,80 @@
 
 
     /*
+     * PRIX MODIFIABLES
+     */
+
+    const priceInputs = {
+      dye: $("priceDye"),
+      formula: $("priceFormula"),
+      potion: $("pricePotion"),
+      down: $("priceDown")
+    };
+
+    // textes qui dépendent des prix (récap + règles)
+    function applyPriceText() {
+      const tr = t();
+      document.querySelectorAll(".priceCur").forEach(el => el.textContent = tr.currencyWord);
+      $("sumAttempt").textContent = A.toLocaleString(tr.locale) + " " + tr.currencyWord;
+      $("sumFail").textContent = (A + F).toLocaleString(tr.locale) + " " + tr.currencyWord;
+      $("rulesBlock").innerHTML = tr.rulesHTML();
+    }
+
+    // recalcule tous les coûts déjà simulés avec les nouveaux prix
+    const costOf = x => x.a * A + x.f * F + x.d * D;
+
+    function recomputeAllCosts() {
+
+      cost = totalAttempts * A + failures * F + downgrades * D;
+
+      if (lastSim) lastSim.forEach(x => { x.c = costOf(x); });
+
+      if (lastCalc && lastCalc.results) lastCalc.results.forEach(x => { x.c = costOf(x); });
+    }
+
+    function onPricesChanged() {
+
+      computeCosts();
+
+      try { localStorage.setItem("forgePrices", JSON.stringify(prices)); } catch (e) {}
+
+      recomputeAllCosts();
+      applyPriceText();
+      update();
+      renderCalc();
+      renderSimulation();
+    }
+
+    function fillPriceInputs() {
+      Object.keys(priceInputs).forEach(k => { priceInputs[k].value = prices[k]; });
+    }
+
+    Object.keys(priceInputs).forEach(k => {
+
+      priceInputs[k].addEventListener("input", () => {
+        const v = parseFloat(priceInputs[k].value);
+        prices[k] = Number.isFinite(v) && v >= 0 ? v : 0;
+        onPricesChanged();
+      });
+
+      // champ vidé -> on remet 0 quand on quitte le champ
+      priceInputs[k].addEventListener("blur", () => {
+        priceInputs[k].value = prices[k];
+      });
+    });
+
+    $("resetPrices").onclick = () => {
+      prices = { ...DEFAULT_PRICES };
+      fillPriceInputs();
+      onPricesChanged();
+    };
+
+
+    /*
      * INITIALISATION
      */
+
+    fillPriceInputs();
 
     applyStaticText();
     update();
