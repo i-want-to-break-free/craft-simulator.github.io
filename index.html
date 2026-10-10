@@ -532,6 +532,54 @@
       min-width: 44px;
     }
 
+    .feegrid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .feecell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px;
+      border: 1px solid #58422e;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #2d241de8, #17110ee8);
+      color: #e2c37d;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .feecell input {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #84542d;
+      border-radius: 4px;
+      background: #120d0b;
+      color: #f0cf75;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      box-shadow: inset 0 2px 6px #000a;
+    }
+
+    .feecell input:focus {
+      outline: none;
+      border-color: #f0cf75;
+    }
+
+    .feecell input::placeholder {
+      color: #e05a43;
+    }
+
+    .feecell.unknown {
+      border-color: #9d2717;
+    }
+
     .costsum {
       display: grid;
       gap: 9px;
@@ -676,6 +724,11 @@
       box-shadow: 0 2px 0 #0005;
     }
 
+    th, td { white-space: nowrap; }
+
+    #thRank, #results td:first-child { width: 1%; text-align: left; }
+    #thRun { text-align: left; }
+
     td:not(:first-child),
     th:not(:first-child) { text-align: right; }
 
@@ -802,6 +855,10 @@
             <b id="useDown">0</b>
             <span class="usecost" id="useDownCost"></span>
           </div>
+          <div class="stat" style="grid-column: 1 / -1;">
+            <small id="useFeeLabel">💵 Prix des tentatives (sans objets)</small>
+            <b id="useFee">0</b>
+          </div>
         </div>
       </div>
 
@@ -856,6 +913,10 @@
             <span class="priceCur">argent</span>
           </label>
         </div>
+
+        <p class="usetitle" id="feeTitle">Prix de la tentative par niveau</p>
+        <div class="feegrid" id="feeGrid"></div>
+        <p class="desc" id="feeNote" style="margin:8px 0 0;"></p>
 
         <div class="costsum">
           <div><span id="sumAttemptLabel">Un essai (formule + potion)</span><b id="sumAttempt">—</b></div>
@@ -937,16 +998,20 @@
         Chaque parcours continue à tenter les améliorations jusqu'à atteindre +20, +22, +23 ou +24.
       </p>
 
-      <button class="primary" id="simulate">⚔ Lancer 1 000 simulations</button>
+      <p class="desc" id="simTargetLabel" style="margin-top:14px;">Objectif de chaque parcours</p>
 
-      <p class="desc" id="filterLabelText" style="margin-top:14px;">Filtrer les résultats par niveau final</p>
+      <div class="targetrow" id="simTargetRow" style="margin-top:6px;">
+        <button class="secondary" data-simtarget="20">+20</button>
+        <button class="secondary" data-simtarget="21">+21</button>
+        <button class="secondary" data-simtarget="22">+22</button>
+        <button class="secondary" data-simtarget="23">+23</button>
+        <button class="secondary active" data-simtarget="24">+24</button>
+      </div>
 
-      <div class="actions" id="filterRow" style="grid-template-columns: repeat(5, 1fr); margin-top:6px; margin-bottom:16px;">
-        <button class="primary" id="filterAllBtn" data-filter="all">Tous</button>
-        <button class="secondary" id="filter20Btn" data-filter="20">+20</button>
-        <button class="secondary" id="filter22Btn" data-filter="22">+22</button>
-        <button class="secondary" id="filter23Btn" data-filter="23">+23</button>
-        <button class="secondary" id="filter24Btn" data-filter="24">+24</button>
+      <button class="primary full" id="simulate" style="margin-top:12px;">⚔ Lancer 1 000 parcours jusqu'à +24</button>
+
+      <div class="progress" id="simProgressWrap" style="visibility:hidden;">
+        <div id="simProgress"></div>
       </div>
 
       <div class="bigstats">
@@ -982,11 +1047,18 @@
         <table>
           <thead>
             <tr>
+              <th id="thRank">N°</th>
               <th id="thRun">🎲 Parcours</th>
               <th id="thAttempts">🎯 Tentatives</th>
               <th id="thCost">💰 Coût</th>
+              <th id="thPct">🍀 Chance</th>
               <th id="thFailures">❌ Échecs</th>
+              <th id="thFormulas">📜 Formules</th>
+              <th id="thPotions">🧪 Potions</th>
+              <th id="thDyes">🎨 Teintures</th>
               <th id="thDowngrades">⬇️ Baisses</th>
+              <th id="thFees">💵 Prix tentatives</th>
+              <th id="thItems">🔁 Items</th>
               <th id="thFinal">🏆 Final</th>
             </tr>
           </thead>
@@ -1012,7 +1084,7 @@
 
     /*
      * CONFIGURATION DES COÛTS
-     *   Essai  : A = formule + potion de chance
+     *   Essai  : prix du niveau + A (A = formule + potion de chance)
      *   Échec  : A + F (F = une teinture)
      *   Baisse (auto ou volontaire) : D
      */
@@ -1020,7 +1092,17 @@
     // prix des objets (modifiables depuis la page, sauvegardés dans le navigateur)
     const DEFAULT_PRICES = { dye: 167, formula: 26, potion: 38, down: 20 };
 
-    let prices = { ...DEFAULT_PRICES };
+    // prix de la tentative selon le niveau de départ (sans les objets)
+    // null = pas encore connu (compté 0)
+    const FEE_LEVELS = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
+    const DEFAULT_FEES = {
+      11: 10, 12: 10, 13: 10, 14: 10, 15: 10, 16: 10,
+      17: 75, 18: 125,
+      19: 500,
+      20: null, 21: null
+    };
+
+    let prices = { ...DEFAULT_PRICES, fees: { ...DEFAULT_FEES } };
 
     try {
       const saved = JSON.parse(localStorage.getItem("forgePrices"));
@@ -1028,17 +1110,37 @@
         Object.keys(DEFAULT_PRICES).forEach(k => {
           if (Number.isFinite(saved[k]) && saved[k] >= 0) prices[k] = saved[k];
         });
+        if (saved.fees) {
+          FEE_LEVELS.forEach(l => {
+            const v = saved.fees[l];
+            // une case vide sauvegardée reprend la valeur par défaut (si elle est connue)
+            if (Number.isFinite(v) && v >= 0) prices.fees[l] = v;
+          });
+        }
       }
     } catch (e) {}
 
-    // A = un essai (formule + potion) · F = en plus si échec (teinture) · D = baisse
+    // A = objets d'un essai (formule + potion) · F = en plus si échec (teinture)
+    // D = baisse · FEE[niveau] = prix de la tentative à ce niveau
     let A, F, D;
+    let FEE = [];
 
     function computeCosts() {
       A = prices.formula + prices.potion;
       F = prices.dye;
       D = prices.down;
+      FEE = [];
+      FEE_LEVELS.forEach(l => { FEE[l] = prices.fees[l] ?? 0; });
     }
+
+    // total des prix de tentative pour un tableau de compteurs par niveau
+    function feeOf(lv) {
+      let t = 0;
+      for (let i = 0; i < lv.length; i++) t += lv[i] * (FEE[i + 11] ?? 0);
+      return t;
+    }
+
+    const newLv = () => new Array(FEE_LEVELS.length).fill(0);
 
     computeCosts();
 
@@ -1092,9 +1194,9 @@
           À <b>+20</b>, <b>+22</b>, <b>+23</b> ou <b>+24</b> :
           la forge s'arrête immédiatement.
           <br><br>
-          <b>Un essai = ${A} argent</b> :
-          1 formule (${prices.formula}) + 1 potion de chance (${prices.potion}).<br>
-          <b>Un échec = ${A + F} argent</b> au total :
+          <b>Un essai</b> = prix de la tentative du niveau
+          + 1 formule (${prices.formula}) + 1 potion de chance (${prices.potion}).<br>
+          <b>Un échec</b> :
           l'essai + 1 teinture (${F}).
           <br><br>
           À <b>+12</b>, <b>+16</b> et <b>+19</b> :
@@ -1116,9 +1218,9 @@
           At <b>+20</b>, <b>+22</b>, <b>+23</b> or <b>+24</b>:
           the forge stops immediately.
           <br><br>
-          <b>One attempt = ${A} silver</b>:
-          1 formula (${prices.formula}) + 1 luck potion (${prices.potion}).<br>
-          <b>One failure = ${A + F} silver</b> total:
+          <b>One attempt</b> = the level's attempt price
+          + 1 formula (${prices.formula}) + 1 luck potion (${prices.potion}).<br>
+          <b>One failure</b>:
           the attempt + 1 dye (${F}).
           <br><br>
           At <b>+12</b>, <b>+16</b> and <b>+19</b>:
@@ -1150,29 +1252,35 @@
         lblFormula: "Formule",
         lblPotion: "Potion de chance",
         lblDown: "Baisser d'un niveau",
-        sumAttemptLabel: "Un essai (formule + potion)",
+        sumAttemptLabel: "Un essai (niveau + formule + potion)",
+        feeTitle: "Prix de la tentative par niveau",
+        feeNote: "Payé à chaque essai fait depuis ce niveau, en plus de la formule et de la potion. Case vide (?) = prix pas encore connu, compté 0.",
+        useFeeLabel: "💵 Prix des tentatives (sans objets)",
+        thFees: "💵 Prix tentatives",
+        rangeTo: "à",
         sumFailLabel: "Un échec (essai + teinture)",
         resetPricesBtn: "↺ Prix par défaut",
         currencyWord: "argent",
         goldWord: "or",
-        forItemRange: "(Tous les parcours)",
-        forItemRangeLvl: (lvl) => `(Seulement les parcours finis à +${lvl})`,
-        realCost: (lvl, n, total, per) =>
-          `<span style="color:#63cf8f">💎 Coût réel d'un +${lvl} : <b>${per}</b></span><br>` +
-          `<small>Les 1 000 items ont coûté ${total} au total, et seulement ${n} ont fini à +${lvl}. ` +
-          `Les chiffres au-dessus ne montrent que ces ${n} parcours chanceux, pas l'argent perdu sur les autres.</small>`,
-        realCostNone: (lvl, total) =>
-          `<span style="color:#e05a43">💎 Aucun +${lvl} sur 1 000 items (${total} dépensés au total). Relance la simulation.</span>`,
         downloadCsvBtn: "⬇ Télécharger CSV",
         downloadJsonBtn: "⬇ Télécharger JSON",
-        filterLabel: "Filtrer les résultats par niveau final",
-        filterAll: "Tous",
-        noMatch: "Aucun parcours ne termine à ce niveau.",
-        matchCount: (n) => `${n} parcours sur 1 000 finissent à ce niveau.`,
+        simTargetLabel: "Objectif de chaque parcours",
+        simObjective: (lvl) => `(Objectif +${lvl})`,
+        thItems: "🔁 Items",
+        thPct: "🍀 Chance",
+        thFormulas: "📜 Formules",
+        thPotions: "🧪 Potions",
+        thDyes: "🎨 Teintures",
+        pctHelp: "% de chance de faire aussi bien ou mieux (coûter autant ou moins cher) que ce parcours",
+        pctNote: "🍀 Colonne Chance : % de chance de faire aussi bien ou mieux que ce parcours (coûter autant ou moins cher).",
+        simItemsAvg: "🔁 Items utilisés en moyenne",
+        simItemsNote: "(un item bloqué à +22 ou +23 avant l'objectif oblige à repartir d'un nouvel item à +11)",
+        simFinals: "🏆 Niveau final",
+        simRunning: (lvl, done) => `Simulation jusqu'à +${lvl} en cours… ${done} / 1 000`,
         rulesHTML: rulesFR,
         simTitle: "Simulation × 1 000",
-        simDesc: "1 000 parcours indépendants commencent à +11. Chaque parcours continue à tenter les améliorations jusqu'à atteindre +20, +22, +23 ou +24.",
-        simulateBtn: "⚔ Lancer 1 000 simulations",
+        simDesc: "Choisis un objectif : 1 000 parcours partent de +11 et forgent jusqu'à l'atteindre, chacun jusqu'au bout. Mêmes règles que le calculateur.",
+        simulateBtn: (lvl) => `⚔ Lancer 1 000 parcours jusqu'à +${lvl}`,
         avgLabel: "🎯 Tentatives moyennes",
         avgCostLabel: "💰 Coût moyen",
         medLabel: "📊 Tentatives médianes",
@@ -1193,7 +1301,7 @@
         unit: "tent.",
         langBtn: "🌐 ENGLISH MODE",
         locale: "fr-FR",
-        summaryTitle: "✦ 1 000 parcours terminés",
+        summaryTitle: (lvl) => `✦ 1 000 parcours jusqu'à +${lvl} terminés`,
         summaryAvg: "Moyenne",
         summaryAttempts: "tentatives",
         summaryCostAvg: "Coût moyen",
@@ -1202,9 +1310,9 @@
         finishedText: (lvl) => lvl === 24
           ? "✦ +24 atteint ! Maximum atteint !"
           : `✦ +${lvl} atteint ! La forge est terminée.`,
-        successMsg: (o, n) => `Réussi ! +${o} → +${n} · ${A} argent`,
-        successDownMsg: (o, n) => `Réussi ! +${o} → +${n} · Baisse automatique · ${A + D} argent`,
-        failMsg: (o, n) => `Échec ! +${o} → +${n} · ${A + F} argent`,
+        successMsg: (o, n, c) => `Réussi ! +${o} → +${n} · ${nf(c, "fr-FR")} argent`,
+        successDownMsg: (o, n, c) => `Réussi ! +${o} → +${n} · Baisse automatique · ${nf(c, "fr-FR")} argent`,
+        failMsg: (o, n, c) => `Échec ! +${o} → +${n} · ${nf(c, "fr-FR")} argent`,
         voluntaryDownMsg: () => `Descente volontaire · ${D} argent`,
 
         // calculateur
@@ -1229,11 +1337,12 @@
         usePotionLabel: "🧪 Potions de chance",
         useDyeLabel: "🎨 Teintures",
         useDownLabel: "⬇️ Baisses de niveau",
-        cons: (a, f, d) =>
+        cons: (a, f, d, fee) =>
           `📜 <b>${nf(a, "fr-FR")}</b> ${pl(a, "formule", "formules")} · ` +
           `🧪 <b>${nf(a, "fr-FR")}</b> ${pl(a, "potion", "potions")} · ` +
           `🎨 <b>${nf(f, "fr-FR")}</b> ${pl(f, "teinture", "teintures")} · ` +
-          `⬇️ <b>${nf(d, "fr-FR")}</b> ${pl(d, "baisse", "baisses")}`,
+          `⬇️ <b>${nf(d, "fr-FR")}</b> ${pl(d, "baisse", "baisses")}` +
+          (fee !== undefined ? ` · 💵 <b>${fmtGold(fee)}</b> de prix de tentative` : ""),
         consThisRun: "Ce parcours a utilisé :",
         consAverage: "En moyenne :",
         consSimAvg: "🧾 Objets utilisés en moyenne par parcours :"
@@ -1261,29 +1370,35 @@
         lblFormula: "Formula",
         lblPotion: "Luck potion",
         lblDown: "Downgrade one level",
-        sumAttemptLabel: "One attempt (formula + potion)",
+        sumAttemptLabel: "One attempt (level + formula + potion)",
+        feeTitle: "Attempt price per level",
+        feeNote: "Paid on every attempt made from that level, on top of the formula and potion. Empty box (?) = price not known yet, counted as 0.",
+        useFeeLabel: "💵 Attempt prices (without items)",
+        thFees: "💵 Attempt prices",
+        rangeTo: "to",
         sumFailLabel: "One failure (attempt + dye)",
         resetPricesBtn: "↺ Default prices",
         currencyWord: "silver",
         goldWord: "gold",
-        forItemRange: "(All runs)",
-        forItemRangeLvl: (lvl) => `(Only runs ending at +${lvl})`,
-        realCost: (lvl, n, total, per) =>
-          `<span style="color:#63cf8f">💎 Real cost of a +${lvl}: <b>${per}</b></span><br>` +
-          `<small>The 1,000 items cost ${total} in total, and only ${n} ended at +${lvl}. ` +
-          `The numbers above only show those ${n} lucky runs, not the silver lost on the others.</small>`,
-        realCostNone: (lvl, total) =>
-          `<span style="color:#e05a43">💎 No +${lvl} out of 1,000 items (${total} spent in total). Run the simulation again.</span>`,
         downloadCsvBtn: "⬇ Download CSV",
         downloadJsonBtn: "⬇ Download JSON",
-        filterLabel: "Filter results by final level",
-        filterAll: "All",
-        noMatch: "No run ends at this level.",
-        matchCount: (n) => `${n} out of 1,000 runs end at this level.`,
+        simTargetLabel: "Target of each run",
+        simObjective: (lvl) => `(Target +${lvl})`,
+        thItems: "🔁 Items",
+        thPct: "🍀 Chance",
+        thFormulas: "📜 Formulas",
+        thPotions: "🧪 Potions",
+        thDyes: "🎨 Dyes",
+        pctHelp: "% chance of doing as well or better (costing the same or less) than this run",
+        pctNote: "🍀 Chance column: % chance of doing as well or better than this run (costing the same or less).",
+        simItemsAvg: "🔁 Average items used",
+        simItemsNote: "(an item stuck at +22 or +23 before the target forces a restart with a new item at +11)",
+        simFinals: "🏆 Final level",
+        simRunning: (lvl, done) => `Simulating up to +${lvl}… ${done} / 1,000`,
         rulesHTML: rulesEN,
         simTitle: "Simulation × 1,000",
-        simDesc: "1,000 independent runs start at +11. Each run keeps attempting upgrades until it reaches +20, +22, +23, or +24.",
-        simulateBtn: "⚔ Run 1,000 simulations",
+        simDesc: "Pick a target: 1,000 runs start at +11 and forge until they reach it, each one all the way. Same rules as the calculator.",
+        simulateBtn: (lvl) => `⚔ Run 1,000 runs up to +${lvl}`,
         avgLabel: "🎯 Average attempts",
         avgCostLabel: "💰 Average cost",
         medLabel: "📊 Median attempts",
@@ -1304,7 +1419,7 @@
         unit: "att.",
         langBtn: "🌐 MODE FRANÇAIS",
         locale: "en-US",
-        summaryTitle: "✦ 1,000 runs completed",
+        summaryTitle: (lvl) => `✦ 1,000 runs up to +${lvl} completed`,
         summaryAvg: "Average",
         summaryAttempts: "attempts",
         summaryCostAvg: "Average cost",
@@ -1313,9 +1428,9 @@
         finishedText: (lvl) => lvl === 24
           ? "✦ +24 reached! Maximum reached!"
           : `✦ +${lvl} reached! The forge is complete.`,
-        successMsg: (o, n) => `Success! +${o} → +${n} · ${A} silver`,
-        successDownMsg: (o, n) => `Success! +${o} → +${n} · Automatic downgrade · ${A + D} silver`,
-        failMsg: (o, n) => `Failure! +${o} → +${n} · ${A + F} silver`,
+        successMsg: (o, n, c) => `Success! +${o} → +${n} · ${nf(c, "en-US")} silver`,
+        successDownMsg: (o, n, c) => `Success! +${o} → +${n} · Automatic downgrade · ${nf(c, "en-US")} silver`,
+        failMsg: (o, n, c) => `Failure! +${o} → +${n} · ${nf(c, "en-US")} silver`,
         voluntaryDownMsg: () => `Voluntary downgrade · ${D} silver`,
 
         calcTitle: "How much does an item cost?",
@@ -1338,11 +1453,12 @@
         usePotionLabel: "🧪 Luck potions",
         useDyeLabel: "🎨 Dyes",
         useDownLabel: "⬇️ Level downgrades",
-        cons: (a, f, d) =>
+        cons: (a, f, d, fee) =>
           `📜 <b>${nf(a, "en-US")}</b> ${pl(a, "formula", "formulas")} · ` +
           `🧪 <b>${nf(a, "en-US")}</b> ${pl(a, "potion", "potions")} · ` +
           `🎨 <b>${nf(f, "en-US")}</b> ${pl(f, "dye", "dyes")} · ` +
-          `⬇️ <b>${nf(d, "en-US")}</b> ${pl(d, "downgrade", "downgrades")}`,
+          `⬇️ <b>${nf(d, "en-US")}</b> ${pl(d, "downgrade", "downgrades")}` +
+          (fee !== undefined ? ` · 💵 <b>${fmtGold(fee)}</b> in attempt prices` : ""),
         consThisRun: "This run used:",
         consAverage: "On average:",
         consSimAvg: "🧾 Average items consumed per run:"
@@ -1359,6 +1475,7 @@
     let level = START_LEVEL;
     let attempts = 0;
     let totalAttempts = 0;
+    let manualLv = newLv();
     let best = START_LEVEL;
     let cost = 0;
     let failures = 0;
@@ -1381,16 +1498,23 @@
       thCost: "c",
       thFailures: "f",
       thDowngrades: "d",
+      thPct: "pct",
+      thFees: "fee",
+      thFormulas: "a",
+      thPotions: "a",
+      thDyes: "f",
+      thItems: "items",
       thFinal: "finalLevel"
     };
 
-    let sortState = { key: null, dir: 1 };
-    let finalFilter = "all";
+    let sortState = { key: null, col: null, dir: 1 };
+    let simTarget = 24;
+    let simRunning = false;
 
     function headerLabel(id, label) {
       const key = sortKeys[id];
       let arrow = "";
-      if (sortState.key === key) {
+      if (sortState.col === id) {
         arrow = sortState.dir === 1 ? " ▲" : " ▼";
       }
       return label + arrow;
@@ -1472,7 +1596,7 @@
 
     function forgeStep(l) {
 
-      let c = A;
+      let c = A + (FEE[l] ?? 0);
       let failed = false;
       let downgraded = false;
 
@@ -1506,9 +1630,9 @@
     function messageHTML() {
       const tr = t();
       switch (lastEvent.type) {
-        case "success": return tr.successMsg(lastEvent.old, lastEvent.new);
-        case "successDowngrade": return tr.successDownMsg(lastEvent.old, lastEvent.new);
-        case "fail": return tr.failMsg(lastEvent.old, lastEvent.new);
+        case "success": return tr.successMsg(lastEvent.old, lastEvent.new, lastEvent.cost);
+        case "successDowngrade": return tr.successDownMsg(lastEvent.old, lastEvent.new, lastEvent.cost);
+        case "fail": return tr.failMsg(lastEvent.old, lastEvent.new, lastEvent.cost);
         case "voluntaryDown": return tr.voluntaryDownMsg();
         case "start":
         default: return tr.defaultMessage;
@@ -1568,7 +1692,8 @@
 
       $("simTitle").textContent = tr.simTitle;
       $("simDesc").textContent = tr.simDesc;
-      $("simulate").textContent = tr.simulateBtn;
+      $("simulate").textContent = tr.simulateBtn(simTarget);
+      $("simTargetLabel").textContent = tr.simTargetLabel;
 
       $("avgLabel").textContent = tr.avgLabel;
       $("avgCostLabel").textContent = tr.avgCostLabel;
@@ -1582,6 +1707,10 @@
       $("thCost").textContent = headerLabel("thCost", tr.thCost);
       $("thFailures").textContent = headerLabel("thFailures", tr.thFailures);
       $("thDowngrades").textContent = headerLabel("thDowngrades", tr.thDowngrades);
+      $("thItems").textContent = headerLabel("thItems", tr.thItems);
+      ["thPct", "thFormulas", "thPotions", "thDyes", "thFees"]
+        .forEach(id => $(id).textContent = headerLabel(id, tr[id]));
+      $("thPct").title = tr.pctHelp;
       $("thFinal").textContent = headerLabel("thFinal", tr.thFinal);
 
       $("footerText").textContent = tr.footer;
@@ -1589,8 +1718,6 @@
       $("downloadCsv").textContent = tr.downloadCsvBtn;
       $("downloadJson").textContent = tr.downloadJsonBtn;
 
-      $("filterLabelText").textContent = tr.filterLabel;
-      $("filterAllBtn").textContent = tr.filterAll;
 
       applyMuteState();
     }
@@ -1635,6 +1762,7 @@
       $("usePotionCost").textContent = silverTxt(totalAttempts * prices.potion);
       $("useDyeCost").textContent = silverTxt(failures * prices.dye);
       $("useDownCost").textContent = silverTxt(downgrades * prices.down);
+      $("useFee").textContent = silverTxt(feeOf(manualLv));
 
       $("attempt").disabled = isFinished(level);
       $("downgrade").disabled = level <= START_LEVEL;
@@ -1658,6 +1786,7 @@
 
       attempts++;
       totalAttempts++;
+      manualLv[level - 11]++;
 
       const old = level;
       const step = forgeStep(level);
@@ -1667,12 +1796,12 @@
 
       if (step.failed) {
         failures++;
-        lastEvent = { type: "fail", old, new: level };
+        lastEvent = { type: "fail", old, new: level, cost: step.cost };
       } else if (step.downgraded) {
         downgrades++;
-        lastEvent = { type: "successDowngrade", old, new: level };
+        lastEvent = { type: "successDowngrade", old, new: level, cost: step.cost };
       } else {
-        lastEvent = { type: "success", old, new: level };
+        lastEvent = { type: "success", old, new: level, cost: step.cost };
       }
 
       best = Math.max(best, level);
@@ -1685,6 +1814,7 @@
       level = START_LEVEL;
       attempts = 0;
       totalAttempts = 0;
+      manualLv = newLv();
       best = START_LEVEL;
       cost = 0;
       failures = 0;
@@ -1701,9 +1831,11 @@
     function one() {
 
       let l = START_LEVEL, a = 0, c = 0, f = 0, d = 0;
+      const lv = newLv();
 
       while (!isFinished(l)) {
         a++;
+        lv[l - 11]++;
         const s = forgeStep(l);
         l = s.level;
         c += s.cost;
@@ -1711,7 +1843,7 @@
         if (s.downgraded) d++;
       }
 
-      return { a, c, f, d, finalLevel: l };
+      return { a, c, f, d, lv, fee: feeOf(lv), finalLevel: l };
     }
 
 
@@ -1727,6 +1859,7 @@
     function runToTarget(target) {
 
       let l = START_LEVEL, a = 0, c = 0, f = 0, d = 0, items = 1;
+      const lv = newLv();
 
       while (l < target) {
 
@@ -1737,6 +1870,7 @@
         }
 
         a++;
+        lv[l - 11]++;
         const s = forgeStep(l);
         l = s.level;
         c += s.cost;
@@ -1744,7 +1878,7 @@
         if (s.downgraded) d++;
       }
 
-      return { a, c, f, d, items, finalLevel: l };
+      return { a, c, f, d, lv, fee: feeOf(lv), items, finalLevel: l };
     }
 
 
@@ -1841,8 +1975,8 @@
 
       $("heroUse").style.display = "block";
       $("heroUse").innerHTML =
-        `${tr.consThisRun} ${tr.cons(r1.a, r1.f, r1.d)}<br>` +
-        `${tr.consAverage} ${tr.cons(avgAtt, avgF, avgD)}`;
+        `${tr.consThisRun} ${tr.cons(r1.a, r1.f, r1.d, r1.fee)}<br>` +
+        `${tr.consAverage} ${tr.cons(avgAtt, avgF, avgD, results.reduce((s, x) => s + x.fee, 0) / n)}`;
     }
 
     targetButtons.forEach(b => {
@@ -1854,16 +1988,58 @@
      * SIMULATION ×1000
      */
 
-    function simulate() {
+    async function simulate() {
 
-      lastSim = Array.from({ length: 1000 }, one)
-        .map((x, i) => ({ ...x, idx: i + 1 }));
+      if (simRunning) return;
+      simRunning = true;
 
+      const target = simTarget;
+      const tr0 = t();
+
+      $("simulate").disabled = true;
+      simTargetButtons.forEach(b => b.disabled = true);
+      $("simProgressWrap").style.visibility = "visible";
+      $("simProgress").style.width = "0%";
+
+      const runs = [];
+      let lastYield = performance.now();
+
+      for (let i = 0; i < 1000; i++) {
+
+        runs.push({ ...runToTarget(target), idx: i + 1 });
+
+        if (performance.now() - lastYield > 30) {
+          $("simProgress").style.width = ((i + 1) / 10) + "%";
+          $("simmsg").textContent = t().simRunning(target, i + 1);
+          await new Promise(r => setTimeout(r, 0));
+          lastYield = performance.now();
+        }
+      }
+
+      $("simProgress").style.width = "100%";
+      setTimeout(() => { $("simProgressWrap").style.visibility = "hidden"; }, 300);
+
+      lastSim = runs;
+      lastSim.target = target;
+
+      simRunning = false;
+      $("simulate").disabled = false;
+      simTargetButtons.forEach(b => b.disabled = false);
       $("downloadCsv").disabled = false;
       $("downloadJson").disabled = false;
 
       renderSimulation();
     }
+
+    const simTargetButtons = [...document.querySelectorAll("[data-simtarget]")];
+
+    simTargetButtons.forEach(b => {
+      b.onclick = () => {
+        simTarget = Number(b.dataset.simtarget);
+        simTargetButtons.forEach(x => x.classList.toggle("active", x === b));
+        $("simulate").textContent = t().simulateBtn(simTarget);
+      };
+    });
 
 
     /*
@@ -1883,18 +2059,20 @@
     }
 
     function simDataAsObjects() {
-
-      const source = finalFilter === "all"
-        ? lastSim
-        : lastSim.filter(x => x.finalLevel === Number(finalFilter));
-
-      return source.map(x => ({
+      return lastSim.map(x => ({
         run: x.idx,
+        target: lastSim.target,
         attempts: x.a,
         cost_silver: x.c,
-        cost_gold: Math.floor(x.c / 1000),
+        cost_gold: Math.round(x.c / 1000),
+        chance_pct: Math.round((x.pct ?? 0) * 10) / 10,
+        formulas: x.a,
+        potions: x.a,
+        dyes: x.f,
         failures: x.f,
         downgrades: x.d,
+        attempt_prices_silver: x.fee,
+        items_used: x.items,
         final_level: x.finalLevel
       }));
     }
@@ -1902,22 +2080,18 @@
     function downloadCSV() {
       if (!lastSim) return;
       const rows = simDataAsObjects();
-      if (rows.length === 0) return;
       const header = Object.keys(rows[0]);
       const lines = [
         header.join(","),
         ...rows.map(row => header.map(k => row[k]).join(","))
       ];
-      const suffix = finalFilter === "all" ? "all" : "+" + finalFilter;
-      downloadFile(`forge-simulation-${suffix}.csv`, lines.join("\n"), "text/csv;charset=utf-8;");
+      downloadFile(`forge-simulation-+${lastSim.target}.csv`, lines.join("\n"), "text/csv;charset=utf-8;");
     }
 
     function downloadJSON() {
       if (!lastSim) return;
       const rows = simDataAsObjects();
-      if (rows.length === 0) return;
-      const suffix = finalFilter === "all" ? "all" : "+" + finalFilter;
-      downloadFile(`forge-simulation-${suffix}.json`, JSON.stringify(rows, null, 2), "application/json;charset=utf-8;");
+      downloadFile(`forge-simulation-+${lastSim.target}.json`, JSON.stringify(rows, null, 2), "application/json;charset=utf-8;");
     }
 
 
@@ -1937,84 +2111,73 @@
 
       const tr = t();
 
-      const clearBoxes = () => {
-        ["avg", "avgCost", "med", "medCost", "min", "max"]
-          .forEach(id => $(id).textContent = "—");
-        $("results").innerHTML = "";
-      };
+      if (simRunning) return;
 
       if (!lastSim) {
         $("simmsg").textContent = tr.simDefaultMsg;
-        clearBoxes();
+        ["avg", "avgCost", "med", "medCost", "min", "max"]
+          .forEach(id => $(id).textContent = "—");
+        $("results").innerHTML = "";
         return;
       }
 
-      const full = lastSim;
-
-      const r = finalFilter === "all"
-        ? full
-        : full.filter(x => x.finalLevel === Number(finalFilter));
-
-      const finals = { 20: 0, 22: 0, 23: 0, 24: 0 };
-
-      full.forEach(x => {
-        if (finals[x.finalLevel] !== undefined) finals[x.finalLevel]++;
-      });
-
-      const totalAll = full.reduce((s, x) => s + x.c, 0);
-      const lvlF = Number(finalFilter);
-      const realLine = finalFilter === "all" ? "" :
-        (r.length
-          ? tr.realCost(lvlF, r.length, fmtGold(totalAll), fmtGold(totalAll / r.length))
-          : tr.realCostNone(lvlF, fmtGold(totalAll))) + "<br><br>";
-
-      const finalsLine =
-        `🏆 +20 : <b>${finals[20]}</b>` +
-        ` · +22 : <b>${finals[22]}</b>` +
-        ` · +23 : <b>${finals[23]}</b>` +
-        ` · +24 : <b>${finals[24]}</b>`;
-
-      if (r.length === 0) {
-        clearBoxes();
-        $("simmsg").innerHTML =
-          `<b style="color:#e4c57e">${tr.summaryTitle}</b><br><br>` +
-          tr.noMatch + `<br><br>` + realLine + finalsLine;
-        return;
-      }
+      const r = lastSim;
+      const n = r.length;
+      const target = r.target;
+      const L = tr.locale;
 
       const attemptsList = r.map(x => x.a).sort((x, y) => x - y);
       const costsList = r.map(x => x.c).sort((x, y) => x - y);
 
-      const av = attemptsList.reduce((s, v) => s + v, 0) / r.length;
-      const ac = costsList.reduce((s, v) => s + v, 0) / r.length;
+      const av = attemptsList.reduce((s, v) => s + v, 0) / n;
+      const ac = costsList.reduce((s, v) => s + v, 0) / n;
       const md = median(attemptsList);
       const mC = median(costsList);
+      const avF = r.reduce((s, x) => s + x.f, 0) / n;
+      const avD = r.reduce((s, x) => s + x.d, 0) / n;
+      const avItems = r.reduce((s, x) => s + x.items, 0) / n;
+      const avFee = r.reduce((s, x) => s + x.fee, 0) / n;
 
-      const small = `<br><small>${finalFilter === "all" ? tr.forItemRange : tr.forItemRangeLvl(finalFilter)}</small>`;
+      const small = `<br><small>${tr.simObjective(target)}</small>`;
 
-      $("avg").innerHTML = Math.round(av).toLocaleString(tr.locale) + " " + tr.unit + small;
+      // % de chance de faire aussi bien ou mieux = part des parcours qui ont coûté autant ou moins
+      r.forEach(x => {
+        let lo = 0, hi = n;
+        while (lo < hi) {
+          const mid = (lo + hi) >> 1;
+          if (costsList[mid] <= x.c) lo = mid + 1; else hi = mid;
+        }
+        x.pct = lo / n * 100;
+      });
+      const pctTxt = v => v < 1 ? "<1 %" : Math.round(v) + " %";
+
+      $("avg").innerHTML = nf(av, L) + " " + tr.unit + small;
       $("avgCost").innerHTML = `${fmtGold(ac)} 💰` + small;
-      $("med").innerHTML = Math.round(md).toLocaleString(tr.locale) + " " + tr.unit + small;
+      $("med").innerHTML = nf(md, L) + " " + tr.unit + small;
       $("medCost").innerHTML = `${fmtGold(mC)} 💰` + small;
-      $("min").innerHTML = attemptsList[0] + " " + tr.unit + small;
-      $("max").innerHTML = attemptsList[attemptsList.length - 1] + " " + tr.unit + small;
+      $("min").innerHTML = nf(attemptsList[0], L) + " " + tr.unit + " · " + fmtGold(costsList[0]) + small;
+      $("max").innerHTML = nf(attemptsList[n - 1], L) + " " + tr.unit + " · " + fmtGold(costsList[n - 1]) + small;
+
+      const finals = {};
+      r.forEach(x => { finals[x.finalLevel] = (finals[x.finalLevel] || 0) + 1; });
+      const finalsLine = `${tr.simFinals} : ` + Object.keys(finals)
+        .sort((a, b) => a - b)
+        .map(k => `+${k} : <b>${finals[k]}</b>`)
+        .join(" · ");
 
       $("simmsg").innerHTML =
-        `<b style="color:#e4c57e">${tr.summaryTitle}</b><br><br>` +
-        (finalFilter !== "all" ? tr.matchCount(r.length) + `<br><br>` + realLine : "") +
-        `🎯 ${tr.summaryAvg} : <b>${Math.round(av).toLocaleString(tr.locale)} ${tr.summaryAttempts}</b>` +
+        `<b style="color:#e4c57e">${tr.summaryTitle(target)}</b><br><br>` +
+        `🎯 ${tr.summaryAvg} : <b>${nf(av, L)} ${tr.summaryAttempts}</b>` +
         ` · 💰 ${tr.summaryCostAvg} : <b>${fmtGold(ac)}</b>` +
         `<br><br>` +
-        `📊 ${tr.summaryMed} : <b>${Math.round(md).toLocaleString(tr.locale)} ${tr.summaryAttempts}</b>` +
+        `📊 ${tr.summaryMed} : <b>${nf(md, L)} ${tr.summaryAttempts}</b>` +
         ` · 💰 ${tr.summaryCostMed} : <b>${fmtGold(mC)}</b>` +
         `<br><br>` +
-        `${tr.consSimAvg}<br>` +
-        tr.cons(
-          av,
-          r.reduce((s, x) => s + x.f, 0) / r.length,
-          r.reduce((s, x) => s + x.d, 0) / r.length
-        ) +
-        `<br><br>` + finalsLine;
+        `${tr.consSimAvg}<br>` + tr.cons(av, avF, avD, avFee) +
+        `<br><br>` +
+        `${tr.simItemsAvg} : <b>${nf(avItems, L)}</b> <small>${tr.simItemsNote}</small>` +
+        `<br><br>` + finalsLine +
+        `<br><br><small>${tr.pctNote}</small>`;
 
       let tableData = r;
 
@@ -2024,13 +2187,21 @@
         );
       }
 
-      $("results").innerHTML = tableData.map(x =>
+      // N° = position de la ligne dans le tableau (1 à 1000), quel que soit le tri
+      $("results").innerHTML = tableData.map((x, i) =>
         `<tr>
-          <td>#${x.idx}</td>
-          <td>${x.a}</td>
+          <td style="color:#f0cf75;font-weight:700;">${i + 1}</td>
+          <td style="text-align:left;">#${x.idx}</td>
+          <td>${nf(x.a, L)}</td>
           <td>${fmtGold(x.c)}</td>
-          <td>${x.f}</td>
-          <td>${x.d}</td>
+          <td><b style="color:${x.pct <= 10 ? "#63cf8f" : x.pct >= 90 ? "#e05a43" : "#e2c37d"}">${pctTxt(x.pct)}</b></td>
+          <td>${nf(x.f, L)}</td>
+          <td>${nf(x.a, L)}</td>
+          <td>${nf(x.a, L)}</td>
+          <td>${nf(x.f, L)}</td>
+          <td>${nf(x.d, L)}</td>
+          <td>${fmtGold(x.fee)}</td>
+          <td>${x.items}</td>
           <td><b>+${x.finalLevel}</b></td>
         </tr>`
       ).join("");
@@ -2068,22 +2239,6 @@
     $("downloadCsv").onclick = downloadCSV;
     $("downloadJson").onclick = downloadJSON;
 
-    function setFinalFilter(value) {
-      finalFilter = value;
-      ["filterAllBtn", "filter20Btn", "filter22Btn", "filter23Btn", "filter24Btn"].forEach(id => {
-        const isActive = $(id).dataset.filter === value;
-        $(id).classList.toggle("primary", isActive);
-        $(id).classList.toggle("secondary", !isActive);
-      });
-      renderSimulation();
-    }
-
-    $("filterAllBtn").onclick = () => setFinalFilter("all");
-    $("filter20Btn").onclick = () => setFinalFilter("20");
-    $("filter22Btn").onclick = () => setFinalFilter("22");
-    $("filter23Btn").onclick = () => setFinalFilter("23");
-    $("filter24Btn").onclick = () => setFinalFilter("24");
-
 
     /*
      * LANGUE
@@ -2108,10 +2263,11 @@
       el.style.userSelect = "none";
       el.addEventListener("click", () => {
         const key = sortKeys[id];
-        if (sortState.key === key) {
+        if (sortState.col === id) {
           sortState.dir *= -1;
         } else {
           sortState.key = key;
+          sortState.col = id;
           sortState.dir = 1;
         }
         applyStaticText();
@@ -2135,21 +2291,34 @@
     function applyPriceText() {
       const tr = t();
       document.querySelectorAll(".priceCur").forEach(el => el.textContent = tr.currencyWord);
-      $("sumAttempt").textContent = A.toLocaleString(tr.locale) + " " + tr.currencyWord;
-      $("sumFail").textContent = (A + F).toLocaleString(tr.locale) + " " + tr.currencyWord;
+      // fourchette calculée sur les prix connus seulement
+      const known = FEE_LEVELS.map(l => prices.fees[l]).filter(v => v !== null);
+      const fees = known.length ? known : [0];
+      const lo = Math.min(...fees), hi = Math.max(...fees);
+      const range = base => lo === hi
+        ? `${nf(base + lo, tr.locale)} ${tr.currencyWord}`
+        : `${nf(base + lo, tr.locale)} ${tr.rangeTo} ${nf(base + hi, tr.locale)} ${tr.currencyWord}`;
+      $("sumAttempt").textContent = range(A);
+      $("sumFail").textContent = range(A + F);
+      $("feeTitle").textContent = tr.feeTitle;
+      $("feeNote").textContent = tr.feeNote;
+      $("useFeeLabel").textContent = tr.useFeeLabel;
       $("rulesBlock").innerHTML = tr.rulesHTML();
     }
 
     // recalcule tous les coûts déjà simulés avec les nouveaux prix
-    const costOf = x => x.a * A + x.f * F + x.d * D;
+    function recost(x) {
+      x.fee = feeOf(x.lv);
+      x.c = x.a * A + x.f * F + x.d * D + x.fee;
+    }
 
     function recomputeAllCosts() {
 
-      cost = totalAttempts * A + failures * F + downgrades * D;
+      cost = totalAttempts * A + failures * F + downgrades * D + feeOf(manualLv);
 
-      if (lastSim) lastSim.forEach(x => { x.c = costOf(x); });
+      if (lastSim) lastSim.forEach(recost);
 
-      if (lastCalc && lastCalc.results) lastCalc.results.forEach(x => { x.c = costOf(x); });
+      if (lastCalc && lastCalc.results) lastCalc.results.forEach(recost);
     }
 
     function onPricesChanged() {
@@ -2165,8 +2334,32 @@
       renderSimulation();
     }
 
+    // grille des prix de tentative par niveau
+    $("feeGrid").innerHTML = FEE_LEVELS.map(l =>
+      `<label class="feecell" id="feeCell${l}">+${l}
+        <input type="number" min="0" step="1" placeholder="?" inputmode="numeric" data-fee="${l}">
+      </label>`
+    ).join("");
+
+    const feeInputs = [...document.querySelectorAll("[data-fee]")];
+
+    feeInputs.forEach(inp => {
+      inp.addEventListener("input", () => {
+        const l = Number(inp.dataset.fee);
+        const v = parseFloat(inp.value);
+        prices.fees[l] = inp.value.trim() === "" ? null : (Number.isFinite(v) && v >= 0 ? v : 0);
+        $("feeCell" + l).classList.toggle("unknown", prices.fees[l] === null);
+        onPricesChanged();
+      });
+    });
+
     function fillPriceInputs() {
       Object.keys(priceInputs).forEach(k => { priceInputs[k].value = prices[k]; });
+      feeInputs.forEach(inp => {
+        const l = Number(inp.dataset.fee);
+        inp.value = prices.fees[l] ?? "";
+        $("feeCell" + l).classList.toggle("unknown", prices.fees[l] === null);
+      });
     }
 
     Object.keys(priceInputs).forEach(k => {
@@ -2184,7 +2377,7 @@
     });
 
     $("resetPrices").onclick = () => {
-      prices = { ...DEFAULT_PRICES };
+      prices = { ...DEFAULT_PRICES, fees: { ...DEFAULT_FEES } };
       fillPriceInputs();
       onPricesChanged();
     };
