@@ -789,6 +789,62 @@
       .autogrid { grid-template-columns: 1fr; }
     }
 
+    /* ===== BUDGET ===== */
+
+    .budgetinputs {
+      display: grid;
+      grid-template-columns: minmax(0, 320px);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .budgetinputs label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px;
+      border: 1px solid #58422e;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #2d241de8, #17110ee8);
+      color: #b59c75;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .budgetinputs label.main { border-color: #9c6b38; }
+
+    .budgetinputs input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #84542d;
+      border-radius: 4px;
+      background: #120d0b;
+      color: #f0cf75;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: right;
+      box-shadow: inset 0 2px 6px #000a;
+    }
+
+    .budgetinputs input:focus { outline: none; border-color: #f0cf75; }
+
+    .budgetres {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .budgetres .big { text-align: center; }
+    .budgetres .big strong { font-size: 34px; display: block; }
+    .budgetres .big em { display: block; margin-top: 4px; color: #c4ad82; font-size: 12px; font-style: normal; }
+
+    @media(max-width:850px) {
+      .budgetres { grid-template-columns: 1fr; }
+    }
+
     .calcHero {
       margin-top: 14px;
       padding: 20px;
@@ -1225,6 +1281,47 @@
     </section>
 
 
+    <!-- ===== BUDGET ===== -->
+
+    <section class="card sim">
+
+      <h2 id="budTitle">Combien d'items avec mon budget ?</h2>
+      <p class="desc" id="budDesc"></p>
+
+      <div class="budgetinputs">
+        <label class="main"><span id="budLblBudget">💰 Budget (or)</span><input type="number" id="budBudget" min="0" step="100" value="10000"></label>
+      </div>
+
+      <button class="primary full" id="budRun" style="margin-top:12px;">⚔ Lancer le craft</button>
+
+      <div class="budgetres">
+        <div class="big"><span>+22</span><strong id="bud22">—</strong></div>
+        <div class="big"><span>+23</span><strong id="bud23">—</strong></div>
+        <div class="big"><span>+24</span><strong id="bud24">—</strong></div>
+      </div>
+
+      <div class="message" id="budMsg"></div>
+
+      <div class="tablewrap" style="max-height:340px;">
+        <table>
+          <thead>
+            <tr>
+              <th id="bThN">N°</th>
+              <th id="bThLevel">🏆 Résultat</th>
+              <th id="bThAttempts">🎯 Tentatives</th>
+              <th id="bThDyes">🎨 Teintures</th>
+              <th id="bThDowns">⬇️ Baisses</th>
+              <th id="bThTime">⏱ Temps</th>
+              <th id="bThCost">💰 Coût</th>
+            </tr>
+          </thead>
+          <tbody id="budBody"></tbody>
+        </table>
+      </div>
+
+    </section>
+
+
     <section class="card sim">
 
       <h2 id="simTitle">Simulation × 1 000</h2>
@@ -1432,6 +1529,7 @@
           +17 : <b>14%</b><br>
           +18 : <b>7%</b><br>
           +19 : <b>2%</b><br>
+          +20 : <b>1%</b><br>
           +21 : <b>1,6%</b><br><br>
           À <b>+20</b>, <b>+22</b>, <b>+23</b> ou <b>+24</b> :
           la forge s'arrête immédiatement.
@@ -1456,6 +1554,7 @@
           +17: <b>14%</b><br>
           +18: <b>7%</b><br>
           +19: <b>2%</b><br>
+          +20: <b>1%</b><br>
           +21: <b>1.6%</b><br><br>
           At <b>+20</b>, <b>+22</b>, <b>+23</b> or <b>+24</b>:
           the forge stops immediately.
@@ -1584,6 +1683,21 @@
         stratTheory: (all, steps, pct) =>
           `Coût moyen théorique : tout tenter <b>${all}</b> · paliers <b>${steps}</b> · économie <b>${pct} %</b>`,
         stratUsed: (name) => `Stratégie : <b>${name}</b>`,
+        budTitle: "Combien d'items avec mon budget ?",
+        budDesc: "Entre ton budget de forge et lance : comme le craft automatique, chaque item part de +11 et est forgé jusqu'à +22, +23 ou +24 avec les paliers (+12, +14, +16, +19), puis on enchaîne avec un nouvel item jusqu'à ce que l'or soit épuisé. Seuls les coûts de forge comptent. Tu obtiens la liste de tous les items craftés.",
+        budLblBudget: "💰 Budget (or)",
+        budRun: "⚔ Lancer le craft",
+        budAgain: "⚔ Relancer",
+        budIdle: "Entre ton budget puis clique sur Lancer le craft.",
+        budSummary: (o) =>
+          `<b style="color:#e4c57e">✦ Budget ${o.budget} épuisé : ${o.count} item${o.count > 1 ? "s" : ""} crafté${o.count > 1 ? "s" : ""}</b><br><br>` +
+          `💸 Dépensé : <b>${o.spent}</b> · reste : <b>${o.left}</b><br>` +
+          `⏱ Temps de jeu total : <b>${o.time}</b> (1 action = 0,5 s)` +
+          (o.partial ? `<br>⏳ Le dernier item s'est arrêté à <b>+${o.partial}</b> faute d'or (pas compté dans les résultats).` : ""),
+        bThN: "N°", bThLevel: "🏆 Résultat", bThAttempts: "🎯 Tentatives", bThDyes: "🎨 Teintures",
+        bThDowns: "⬇️ Baisses", bThTime: "⏱ Temps", bThCost: "💰 Coût",
+        budUnfinished: (l) => `⏳ Inachevé (+${l})`,
+        budNotEnough: "Budget trop faible pour forger.",
         histTitle: "Historique des crafts",
         hThN: "N°", hThLevel: "🏆 Résultat", hThTime: "⏱ Temps", hThAttempts: "🎯 Tentatives",
         hThDyes: "🎨 Teintures", hThDowns: "⬇️ Baisses", hThItems: "🔁 Items", hThCost: "💰 Coût", hThDate: "📅 Date",
@@ -1759,6 +1873,21 @@
         stratTheory: (all, steps, pct) =>
           `Theoretical average cost: attempt everything <b>${all}</b> · steps <b>${steps}</b> · savings <b>${pct}%</b>`,
         stratUsed: (name) => `Strategy: <b>${name}</b>`,
+        budTitle: "How many items with my budget?",
+        budDesc: "Enter your forging budget and start: like the auto craft, every item starts at +11 and is forged up to +22, +23 or +24 using the steps (+12, +14, +16, +19), then a new item follows until the gold runs out. Only forging costs count. You get the list of every crafted item.",
+        budLblBudget: "💰 Budget (gold)",
+        budRun: "⚔ Start crafting",
+        budAgain: "⚔ Run again",
+        budIdle: "Enter your budget, then click Start crafting.",
+        budSummary: (o) =>
+          `<b style="color:#e4c57e">✦ Budget ${o.budget} spent: ${o.count} item${o.count > 1 ? "s" : ""} crafted</b><br><br>` +
+          `💸 Spent: <b>${o.spent}</b> · left: <b>${o.left}</b><br>` +
+          `⏱ Total game time: <b>${o.time}</b> (1 action = 0.5 s)` +
+          (o.partial ? `<br>⏳ The last item stopped at <b>+${o.partial}</b> for lack of gold (not counted in the results).` : ""),
+        bThN: "No.", bThLevel: "🏆 Result", bThAttempts: "🎯 Attempts", bThDyes: "🎨 Dyes",
+        bThDowns: "⬇️ Downgrades", bThTime: "⏱ Time", bThCost: "💰 Cost",
+        budUnfinished: (l) => `⏳ Unfinished (+${l})`,
+        budNotEnough: "Budget too low to forge.",
         histTitle: "Craft history",
         hThN: "No.", hThLevel: "🏆 Result", hThTime: "⏱ Time", hThAttempts: "🎯 Attempts",
         hThDyes: "🎨 Dyes", hThDowns: "⬇️ Downgrades", hThItems: "🔁 Items", hThCost: "💰 Cost", hThDate: "📅 Date",
@@ -2782,6 +2911,7 @@
       renderCalc();
       renderStratInfo();
       renderAuto();
+      renderBudget();
       renderSimulation();
     };
 
@@ -2860,6 +2990,7 @@
       policyCache = {};
       renderStratInfo();
       renderAuto();
+      renderBudget();
 
       try { localStorage.setItem("forgePrices", JSON.stringify(prices)); } catch (e) {}
 
@@ -3237,12 +3368,142 @@
 
 
     /*
+     * BUDGET : combien d'items +22 / +23 / +24 pour X or
+     *
+     * Un parcours = on achète un item +11, on le forge (paliers fixes)
+     * jusqu'à +22/+23/+24, et on recommence tant qu'il reste de l'or.
+     * Si l'or manque en plein milieu, l'item reste inachevé.
+     */
+
+    let budResult = null;
+
+    const budNum = id => {
+      const v = parseFloat($(id).value);
+      return Number.isFinite(v) && v >= 0 ? v : 0;
+    };
+
+    // un seul craft : on enchaîne les items jusqu'à épuisement du budget
+    function budgetRun(budgetSilver) {
+
+      let money = budgetSilver;
+      const items = [];
+      let partial = null;
+
+      while (true) {
+
+        let l = START_LEVEL;
+        const it = { attempts: 0, fails: 0, downs: 0, actions: 0, cost: 0 };
+        let broke = false;
+
+        while (l < 22) {
+
+          if (AUTO_DOWN[l]) {
+            if (money < D) { broke = true; break; }
+            money -= D; it.cost += D; it.downs++; it.actions++; l--;
+            continue;
+          }
+
+          // on ne tente que si on peut payer le pire cas (échec)
+          if (money < A + F + (FEE[l] ?? 0)) { broke = true; break; }
+
+          const st = forgeStep(l);
+          money -= st.cost; it.cost += st.cost;
+          it.attempts++; it.actions++;
+          if (st.failed) it.fails++;
+          if (st.downgraded) it.downs++;
+          l = st.level;
+        }
+
+        it.level = l;
+
+        if (broke) {
+          if (it.actions > 0) partial = it;
+          break;
+        }
+
+        items.push(it);
+      }
+
+      return { items, partial, left: money };
+    }
+
+    function budgetCalc() {
+      const budget = budNum("budBudget") * 1000;
+      budResult = { budget, ...budgetRun(budget) };
+      renderBudget();
+    }
+
+    function renderBudget() {
+
+      const tr = t();
+      const L = tr.locale;
+
+      $("budTitle").textContent = tr.budTitle;
+      $("budLblBudget").textContent = tr.budLblBudget;
+      $("budDesc").textContent = tr.budDesc;
+      $("budRun").textContent = budResult ? tr.budAgain : tr.budRun;
+      ["bThN", "bThLevel", "bThAttempts", "bThDyes", "bThDowns", "bThTime", "bThCost"]
+        .forEach(id => $(id).textContent = tr[id]);
+
+      if (!budResult) {
+        ["bud22", "bud23", "bud24"].forEach(id => $(id).textContent = "—");
+        $("budMsg").textContent = tr.budIdle;
+        $("budBody").innerHTML = "";
+        return;
+      }
+
+      const { items, partial, left, budget } = budResult;
+
+      [22, 23, 24].forEach(lvl => {
+        $("bud" + lvl).textContent = items.filter(x => x.level === lvl).length;
+      });
+
+      if (!items.length && !partial) {
+        $("budMsg").textContent = tr.budNotEnough;
+        $("budBody").innerHTML = "";
+        return;
+      }
+
+      const totalActions = items.reduce((s, x) => s + x.actions, 0) + (partial ? partial.actions : 0);
+
+      $("budMsg").innerHTML = tr.budSummary({
+        budget: fmtGold(budget),
+        count: items.length,
+        spent: fmtGold(budget - left),
+        left: fmtGold(left),
+        time: fmtTimeLong(totalActions * AUTO_ACTION_SEC),
+        partial: partial ? partial.level : null
+      });
+
+      const row = (n, label, color, x) =>
+        `<tr>
+          <td>${n}</td>
+          <td><b style="color:${color}">${label}</b></td>
+          <td>${nf(x.attempts, L)}</td>
+          <td>${nf(x.fails, L)}</td>
+          <td>${nf(x.downs, L)}</td>
+          <td>${fmtTimeLong(x.actions * AUTO_ACTION_SEC)}</td>
+          <td>${fmtGold(x.cost)}</td>
+        </tr>`;
+
+      $("budBody").innerHTML =
+        items.map((x, i) => row(i + 1, "+" + x.level,
+          x.level === 24 ? "#f0cf75" : x.level === 23 ? "#63cf8f" : "#e2c37d", x)).join("") +
+        (partial ? row("—", tr.budUnfinished(partial.level), "#998368", partial) : "");
+    }
+
+    $("budRun").onclick = budgetCalc;
+
+
+    /*
+     * INITIALISATION    /*
      * INITIALISATION
      */
 
     fillPriceInputs();
     renderStratInfo();
     renderAuto();
+    renderBudget();
 
     applyStaticText();
     update();
