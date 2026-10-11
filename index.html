@@ -1189,6 +1189,32 @@
 
       <div class="message" id="autoMsg"></div>
 
+      <p class="usetitle" id="histTitle">Historique des crafts</p>
+      <div class="message" id="histSummary" style="margin-top:8px;"></div>
+
+      <div class="tablewrap" style="max-height:300px;">
+        <table>
+          <thead>
+            <tr>
+              <th id="hThN">N°</th>
+              <th id="hThLevel">🏆 Résultat</th>
+              <th id="hThTime">⏱ Temps</th>
+              <th id="hThAttempts">🎯 Tentatives</th>
+              <th id="hThDyes">🎨 Teintures</th>
+              <th id="hThDowns">⬇️ Baisses</th>
+              <th id="hThCost">💰 Coût</th>
+              <th id="hThDate">📅 Date</th>
+            </tr>
+          </thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+
+      <div class="actions" style="margin-top:10px;">
+        <button class="secondary" id="histCsv">⬇ Télécharger l'historique (CSV)</button>
+        <button class="dark" id="histClear">🗑 Effacer l'historique</button>
+      </div>
+
     </section>
 
 
@@ -1551,6 +1577,17 @@
         stratTheory: (all, steps, pct) =>
           `Coût moyen théorique : tout tenter <b>${all}</b> · paliers <b>${steps}</b> · économie <b>${pct} %</b>`,
         stratUsed: (name) => `Stratégie : <b>${name}</b>`,
+        histTitle: "Historique des crafts",
+        hThN: "N°", hThLevel: "🏆 Résultat", hThTime: "⏱ Temps", hThAttempts: "🎯 Tentatives",
+        hThDyes: "🎨 Teintures", hThDowns: "⬇️ Baisses", hThCost: "💰 Coût", hThDate: "📅 Date",
+        histCsv: "⬇ Télécharger l'historique (CSV)",
+        histClear: "🗑 Effacer l'historique",
+        histConfirm: "Effacer tout l'historique des crafts ?",
+        histEmpty: "Aucun craft terminé pour l'instant. Chaque craft terminé s'enregistre ici automatiquement.",
+        histSummary: (n, c22, c23, c24, avgCost, avgTime, total) =>
+          `📜 <b>${n}</b> craft${n > 1 ? "s" : ""} terminé${n > 1 ? "s" : ""} · ` +
+          `+22 : <b>${c22}</b> · +23 : <b>${c23}</b> · +24 : <b>${c24}</b><br>` +
+          `💰 Coût moyen : <b>${avgCost}</b> · ⏱ Temps moyen : <b>${avgTime}</b> · 💸 Total dépensé : <b>${total}</b>`,
         autoTitle: "Craft automatique",
         autoDesc: "Appuie sur Lecture : le craft part de +11 et fait une action toutes les 0,5 seconde (tentative ou baisse au palier). Il s'arrête tout seul dès que l'item arrive à +22, +23 ou +24. Le chrono compte le temps de jeu (1 action = 0,5 s), même en vitesse accélérée.",
         autoStrat: (list) => list.length
@@ -1708,6 +1745,17 @@
         stratTheory: (all, steps, pct) =>
           `Theoretical average cost: attempt everything <b>${all}</b> · steps <b>${steps}</b> · savings <b>${pct}%</b>`,
         stratUsed: (name) => `Strategy: <b>${name}</b>`,
+        histTitle: "Craft history",
+        hThN: "No.", hThLevel: "🏆 Result", hThTime: "⏱ Time", hThAttempts: "🎯 Attempts",
+        hThDyes: "🎨 Dyes", hThDowns: "⬇️ Downgrades", hThCost: "💰 Cost", hThDate: "📅 Date",
+        histCsv: "⬇ Download history (CSV)",
+        histClear: "🗑 Clear history",
+        histConfirm: "Clear the whole craft history?",
+        histEmpty: "No finished craft yet. Every finished craft is saved here automatically.",
+        histSummary: (n, c22, c23, c24, avgCost, avgTime, total) =>
+          `📜 <b>${n}</b> finished craft${n > 1 ? "s" : ""} · ` +
+          `+22: <b>${c22}</b> · +23: <b>${c23}</b> · +24: <b>${c24}</b><br>` +
+          `💰 Average cost: <b>${avgCost}</b> · ⏱ Average time: <b>${avgTime}</b> · 💸 Total spent: <b>${total}</b>`,
         autoTitle: "Auto craft",
         autoDesc: "Press Play: crafting starts at +11 and performs one action every 0.5 second (attempt or step downgrade). It stops by itself as soon as the item reaches +22, +23 or +24. The timer counts game time (1 action = 0.5 s), even at higher speed.",
         autoStrat: (list) => list.length
@@ -2872,6 +2920,20 @@
     });
 
     let auto = autoFresh();
+
+    // historique des crafts terminés (sauvegardé dans le navigateur)
+    let autoHistory = [];
+    try {
+      const h = JSON.parse(localStorage.getItem("forgeAutoHistory"));
+      if (Array.isArray(h)) autoHistory = h;
+    } catch (e) {}
+
+    function saveHistory() {
+      try { localStorage.setItem("forgeAutoHistory", JSON.stringify(autoHistory)); } catch (e) {}
+    }
+
+    // coût recalculé avec les prix actuels, comme partout ailleurs
+    const histCost = h => h.attempts * A + h.fails * F + h.downs * D + feeOf(h.lv);
     let autoTimer = null;
     let autoSpeed = 1;
 
@@ -2928,6 +2990,17 @@
       if (auto.level >= AUTO_STOP) {
         auto.done = true;
         autoPush({ type: "end", n: auto.level, t: auto.actions });
+        autoHistory.push({
+          n: (autoHistory.length ? autoHistory[autoHistory.length - 1].n : 0) + 1,
+          level: auto.level,
+          actions: auto.actions,
+          attempts: auto.attempts,
+          fails: auto.fails,
+          downs: auto.downs,
+          lv: auto.lv.slice(),
+          date: Date.now()
+        });
+        saveHistory();
         autoStop();
       }
     }
@@ -3005,6 +3078,8 @@
         $("autoMsg").textContent = auto.actions > 0 ? tr.autoPaused : tr.autoIdle;
       }
 
+      renderHistory();
+
       // effet visuel (seulement aux vitesses lentes)
       const screen = $("autoScreen");
       screen.classList.remove("flash-ok", "flash-ko", "flash-dn");
@@ -3016,6 +3091,74 @@
       }
       auto.flash = null;
     }
+
+    function renderHistory() {
+
+      const tr = t();
+      const L = tr.locale;
+
+      $("histTitle").textContent = tr.histTitle;
+      ["hThN", "hThLevel", "hThTime", "hThAttempts", "hThDyes", "hThDowns", "hThCost", "hThDate"]
+        .forEach(id => $(id).textContent = tr[id]);
+      $("histCsv").textContent = tr.histCsv;
+      $("histClear").textContent = tr.histClear;
+      $("histCsv").disabled = $("histClear").disabled = autoHistory.length === 0;
+
+      const n = autoHistory.length;
+
+      if (!n) {
+        $("histSummary").textContent = tr.histEmpty;
+        $("histBody").innerHTML = "";
+        return;
+      }
+
+      const costs = autoHistory.map(histCost);
+      const total = costs.reduce((s, v) => s + v, 0);
+      const avgTime = autoHistory.reduce((s, h) => s + h.actions, 0) / n * AUTO_ACTION_SEC;
+      const count = lvl => autoHistory.filter(h => h.level === lvl).length;
+
+      $("histSummary").innerHTML = tr.histSummary(
+        n, count(22), count(23), count(24),
+        fmtGold(total / n), fmtTimeLong(avgTime), fmtGold(total)
+      );
+
+      const fmtDate = ts => new Date(ts).toLocaleString(L, {
+        day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"
+      });
+
+      $("histBody").innerHTML = autoHistory.map((h, i) => ({ h, c: costs[i] })).reverse().map(({ h, c }) =>
+        `<tr>
+          <td>${h.n}</td>
+          <td><b style="color:${h.level === 24 ? "#f0cf75" : h.level === 23 ? "#63cf8f" : "#e2c37d"}">+${h.level}</b></td>
+          <td>${fmtTimeLong(h.actions * AUTO_ACTION_SEC)}</td>
+          <td>${nf(h.attempts, L)}</td>
+          <td>${nf(h.fails, L)}</td>
+          <td>${nf(h.downs, L)}</td>
+          <td>${fmtGold(c)}</td>
+          <td>${fmtDate(h.date)}</td>
+        </tr>`
+      ).join("");
+    }
+
+    $("histClear").onclick = () => {
+      if (!autoHistory.length) return;
+      if (!confirm(t().histConfirm)) return;
+      autoHistory = [];
+      saveHistory();
+      renderHistory();
+    };
+
+    $("histCsv").onclick = () => {
+      if (!autoHistory.length) return;
+      const header = ["craft", "result", "time_seconds", "attempts", "formulas", "potions", "dyes",
+        "downgrades", "attempt_prices_silver", "cost_silver", "cost_gold", "date"];
+      const lines = autoHistory.map(h => {
+        const c = histCost(h);
+        return [h.n, h.level, h.actions * AUTO_ACTION_SEC, h.attempts, h.attempts, h.attempts, h.fails,
+          h.downs, feeOf(h.lv), c, Math.round(c / 1000), new Date(h.date).toISOString()].join(",");
+      });
+      downloadFile("forge-craft-history.csv", [header.join(","), ...lines].join("\n"), "text/csv;charset=utf-8;");
+    };
 
     $("autoPlay").onclick = () => {
       if (autoTimer) {
