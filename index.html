@@ -645,6 +645,150 @@
       box-shadow: inset 0 1px #f5c27b55, 0 0 0 1px #3b160d, 0 0 18px #e64b2066, 0 7px 18px #0009;
     }
 
+    .stratrow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .stratrow button.active {
+      background: linear-gradient(180deg, #1f5c3f, #0c1712);
+      border-color: #59c68a;
+      color: #baf0d2;
+      box-shadow: inset 0 1px #ffffff30, 0 0 14px #59c68a44, 0 7px 18px #0009;
+    }
+
+    .stratinfo {
+      margin-top: 8px;
+      padding: 10px 12px;
+      border: 1px solid #3f6b52;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #17241ce8, #0e1511e8);
+      color: #a9d8bd;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .stratinfo b { color: #baf0d2; }
+
+    /* ===== CRAFT AUTOMATIQUE ===== */
+
+    .autogrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .autoscreen {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 230px;
+      border: 2px solid #6e4726;
+      border-radius: 4px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(255, 101, 25, .16), transparent 30%),
+        linear-gradient(145deg, #0e0c0a, #272019 48%, #0c0908);
+      box-shadow: inset 0 0 55px #000, 0 10px 30px #0009;
+      transition: box-shadow .25s ease;
+    }
+
+    .autoscreen.flash-ok { box-shadow: inset 0 0 55px #000, 0 0 0 2px #59c68a, 0 0 28px #59c68a66; }
+    .autoscreen.flash-ko { box-shadow: inset 0 0 55px #000, 0 0 0 2px #e05a43, 0 0 28px #e05a4366; }
+    .autoscreen.flash-dn { box-shadow: inset 0 0 55px #000, 0 0 0 2px #6aa9e0, 0 0 28px #6aa9e066; }
+    .autoscreen.done { box-shadow: inset 0 0 55px #000, 0 0 0 2px #f0cf75, 0 0 40px #f0cf7588; }
+
+    .autolevel {
+      color: #f0ce7a;
+      font-size: 86px;
+      font-weight: 700;
+      line-height: 1;
+      text-shadow: 0 2px 0 #704718, 0 5px 0 #25160b, 0 0 26px #f08c2b55;
+    }
+
+    .autochrono {
+      margin-top: 10px;
+      color: #e2c37d;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: .06em;
+    }
+
+    .autosub {
+      margin-top: 4px;
+      color: #998368;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .autocost {
+      margin-top: 10px;
+      color: #f3c95e;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .autoctrl {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .autoctrl button { font-size: 18px; }
+
+    .speedrow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .speedrow button { padding: 9px 6px; font-size: 13px; }
+
+    .speedrow button.active {
+      background: linear-gradient(180deg, #a84a20, #702010);
+      border-color: #f0cf75;
+    }
+
+    .autostats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .autostats .stat { min-height: 64px; padding: 10px; }
+    .autostats .stat b { font-size: 18px; }
+
+    .autolog {
+      margin-top: 10px;
+      height: 190px;
+      overflow: auto;
+      padding: 8px 10px;
+      border: 1px solid #61472e;
+      border-radius: 4px;
+      background: #130e0be8;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .autolog div { white-space: nowrap; }
+    .autolog .ok { color: #63cf8f; }
+    .autolog .ko { color: #e0876f; }
+    .autolog .dn { color: #8cbbe6; }
+    .autolog .end { color: #f0cf75; font-weight: 700; }
+    .autolog .t { color: #806c52; margin-right: 6px; }
+
+    @media(max-width:850px) {
+      .autogrid { grid-template-columns: 1fr; }
+    }
+
     .calcHero {
       margin-top: 14px;
       padding: 20px;
@@ -948,6 +1092,12 @@
         <button class="secondary" data-target="24">+24</button>
       </div>
 
+      <div class="stratrow" id="calcStratRow">
+        <button class="secondary" data-calcstrat="all">⚒ Tout tenter</button>
+        <button class="secondary active" data-calcstrat="steps">📉 Baisser aux paliers</button>
+      </div>
+      <div class="stratinfo" id="calcStratInfo"></div>
+
       <div class="progress" id="calcProgressWrap" style="visibility:hidden;">
         <div id="calcProgress"></div>
       </div>
@@ -989,6 +1139,59 @@
     </section>
 
 
+    <!-- ===== CRAFT AUTOMATIQUE ===== -->
+
+    <section class="card sim">
+
+      <h2 id="autoTitle">Craft automatique</h2>
+      <p class="desc" id="autoDesc"></p>
+      <div class="stratinfo" id="autoStratInfo"></div>
+
+      <div class="autogrid">
+
+        <div>
+          <div class="autoscreen" id="autoScreen">
+            <div class="itemname" id="autoItemLabel">Équipement</div>
+            <div class="autolevel" id="autoLevel">+11</div>
+            <div class="autochrono" id="autoChrono">00:00:00</div>
+            <div class="autosub" id="autoChronoSub"></div>
+            <div class="autocost" id="autoCost">0 argent</div>
+          </div>
+
+          <div class="autoctrl">
+            <button class="primary" id="autoPlay">▶ Lecture</button>
+            <button class="dark" id="autoReset">↻ Réinitialiser</button>
+          </div>
+
+          <div class="speedrow">
+            <button class="secondary active" data-speed="1">×1</button>
+            <button class="secondary" data-speed="10">×10</button>
+            <button class="secondary" data-speed="100">×100</button>
+            <button class="secondary" data-speed="1000">×1000</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="autostats">
+            <div class="stat"><small id="autoLblChance">Chance actuelle</small><b id="autoChance">—</b></div>
+            <div class="stat"><small id="autoLblAttempts">🎯 Tentatives</small><b id="autoAttempts">0</b></div>
+            <div class="stat"><small id="autoLblFormula">📜 Formules</small><b id="autoFormula">0</b></div>
+            <div class="stat"><small id="autoLblPotion">🧪 Potions</small><b id="autoPotion">0</b></div>
+            <div class="stat"><small id="autoLblDye">🎨 Teintures</small><b id="autoDye">0</b></div>
+            <div class="stat"><small id="autoLblDown">⬇️ Baisses</small><b id="autoDown">0</b></div>
+            <div class="stat"><small id="autoLblFee">💵 Prix tentatives</small><b id="autoFee">0</b></div>
+            <div class="stat"><small id="autoLblBest">🏅 Meilleur</small><b id="autoBest">+11</b></div>
+          </div>
+          <div class="autolog" id="autoLog"></div>
+        </div>
+
+      </div>
+
+      <div class="message" id="autoMsg"></div>
+
+    </section>
+
+
     <section class="card sim">
 
       <h2 id="simTitle">Simulation × 1 000</h2>
@@ -1007,6 +1210,12 @@
         <button class="secondary" data-simtarget="23">+23</button>
         <button class="secondary active" data-simtarget="24">+24</button>
       </div>
+
+      <div class="stratrow" id="simStratRow">
+        <button class="secondary" data-simstrat="all">⚒ Tout tenter</button>
+        <button class="secondary active" data-simstrat="steps">📉 Baisser aux paliers</button>
+      </div>
+      <div class="stratinfo" id="simStratInfo"></div>
 
       <button class="primary full" id="simulate" style="margin-top:12px;">⚔ Lancer 1 000 parcours jusqu'à +24</button>
 
@@ -1330,6 +1539,46 @@
         calcMaxLabel: "💀 Plus cher",
         calcAttLabel: "🎯 Tentatives moyennes",
         calcItemsLabel: "🔁 Items utilisés (moyenne)",
+        stratAll: "⚒ Tout tenter",
+        stratSteps: "📉 Baisser aux paliers",
+        stratNameAll: "tout tenter",
+        stratNameSteps: "baisser aux paliers",
+        stratPick: "Choisis un objectif pour voir les paliers.",
+        stratStepsInfo: (lvl, list) => list.length
+          ? `Pour un +${lvl}, on baisse à : ${list.map(l => `<b>+${l} → +${l - 1}</b>`).join(" · ")}. Partout ailleurs, on tente.`
+          : `Pour un +${lvl}, aucune baisse n'est rentable : on tente partout.`,
+        stratAllInfo: (lvl) => `Pour un +${lvl}, on tente à chaque niveau, sans jamais baisser volontairement.`,
+        stratTheory: (all, steps, pct) =>
+          `Coût moyen théorique : tout tenter <b>${all}</b> · paliers <b>${steps}</b> · économie <b>${pct} %</b>`,
+        stratUsed: (name) => `Stratégie : <b>${name}</b>`,
+        autoTitle: "Craft automatique",
+        autoDesc: "Appuie sur Lecture : le craft part de +11 et fait une action toutes les 0,5 seconde (tentative ou baisse au palier). Il s'arrête tout seul dès que l'item arrive à +22, +23 ou +24. Le chrono compte le temps de jeu (1 action = 0,5 s), même en vitesse accélérée.",
+        autoStrat: (list) => list.length
+          ? `Paliers respectés : ${list.map(l => `<b>+${l} → +${l - 1}</b>`).join(" · ")}. On tente partout ailleurs.`
+          : `Aucun palier rentable avec ces prix : on tente partout.`,
+        autoPlay: "▶ Lecture",
+        autoPause: "⏸ Pause",
+        autoResume: "▶ Reprendre",
+        autoAgain: "▶ Nouveau craft",
+        autoReset: "↻ Réinitialiser",
+        autoChronoSub: "Temps de jeu · 1 action = 0,5 s",
+        autoLblChance: "🍀 Chance actuelle",
+        autoLblAttempts: "🎯 Tentatives",
+        autoLblFormula: "📜 Formules",
+        autoLblPotion: "🧪 Potions",
+        autoLblDye: "🎨 Teintures",
+        autoLblDown: "⬇️ Baisses",
+        autoLblFee: "💵 Prix tentatives",
+        autoLblBest: "🏅 Meilleur",
+        autoIdle: "Prêt. Appuie sur Lecture pour lancer le craft.",
+        autoRunning: (spd) => `Craft en cours… (vitesse ×${spd})`,
+        autoPaused: "En pause.",
+        autoDone: (lvl, time, cost, a) => `✦ +${lvl} obtenu ! Temps : <b>${time}</b> · ${a} tentatives · Coût : <b>${cost}</b>`,
+        logOk: (o, n, c) => `✔ Réussite +${o} → +${n} · ${c}`,
+        logOkDown: (o, n, c) => `✔ Réussite +${o} → +${n} (baisse auto) · ${c}`,
+        logKo: (o, n, c) => `✖ Échec +${o} → +${n} · ${c}`,
+        logDown: (o, n, c) => `⬇ Palier : baisse +${o} → +${n} · ${c}`,
+        logEnd: (n) => `✦ +${n} atteint, craft terminé !`,
 
         // compteur d'objets
         useTitle: "Objets utilisés",
@@ -1447,6 +1696,46 @@
         calcMaxLabel: "💀 Most expensive",
         calcAttLabel: "🎯 Average attempts",
         calcItemsLabel: "🔁 Items used (average)",
+        stratAll: "⚒ Attempt everything",
+        stratSteps: "📉 Downgrade at steps",
+        stratNameAll: "attempt everything",
+        stratNameSteps: "downgrade at steps",
+        stratPick: "Pick a target to see the steps.",
+        stratStepsInfo: (lvl, list) => list.length
+          ? `For a +${lvl}, downgrade at: ${list.map(l => `<b>+${l} → +${l - 1}</b>`).join(" · ")}. Attempt everywhere else.`
+          : `For a +${lvl}, no downgrade pays off: attempt everywhere.`,
+        stratAllInfo: (lvl) => `For a +${lvl}, attempt at every level, never downgrading voluntarily.`,
+        stratTheory: (all, steps, pct) =>
+          `Theoretical average cost: attempt everything <b>${all}</b> · steps <b>${steps}</b> · savings <b>${pct}%</b>`,
+        stratUsed: (name) => `Strategy: <b>${name}</b>`,
+        autoTitle: "Auto craft",
+        autoDesc: "Press Play: crafting starts at +11 and performs one action every 0.5 second (attempt or step downgrade). It stops by itself as soon as the item reaches +22, +23 or +24. The timer counts game time (1 action = 0.5 s), even at higher speed.",
+        autoStrat: (list) => list.length
+          ? `Steps applied: ${list.map(l => `<b>+${l} → +${l - 1}</b>`).join(" · ")}. Attempt everywhere else.`
+          : `No profitable step with these prices: attempt everywhere.`,
+        autoPlay: "▶ Play",
+        autoPause: "⏸ Pause",
+        autoResume: "▶ Resume",
+        autoAgain: "▶ New craft",
+        autoReset: "↻ Reset",
+        autoChronoSub: "Game time · 1 action = 0.5 s",
+        autoLblChance: "🍀 Current chance",
+        autoLblAttempts: "🎯 Attempts",
+        autoLblFormula: "📜 Formulas",
+        autoLblPotion: "🧪 Potions",
+        autoLblDye: "🎨 Dyes",
+        autoLblDown: "⬇️ Downgrades",
+        autoLblFee: "💵 Attempt prices",
+        autoLblBest: "🏅 Best",
+        autoIdle: "Ready. Press Play to start crafting.",
+        autoRunning: (spd) => `Crafting… (speed ×${spd})`,
+        autoPaused: "Paused.",
+        autoDone: (lvl, time, cost, a) => `✦ +${lvl} obtained! Time: <b>${time}</b> · ${a} attempts · Cost: <b>${cost}</b>`,
+        logOk: (o, n, c) => `✔ Success +${o} → +${n} · ${c}`,
+        logOkDown: (o, n, c) => `✔ Success +${o} → +${n} (auto downgrade) · ${c}`,
+        logKo: (o, n, c) => `✖ Failure +${o} → +${n} · ${c}`,
+        logDown: (o, n, c) => `⬇ Step: downgrade +${o} → +${n} · ${c}`,
+        logEnd: (n) => `✦ +${n} reached, craft complete!`,
 
         useTitle: "Items consumed",
         useFormulaLabel: "📜 Formulas",
@@ -1856,7 +2145,112 @@
      * l'argent dépensé reste compté.
      */
 
-    function runToTarget(target) {
+    /*
+     * STRATÉGIE OPTIMALE (calcul exact du coût moyen)
+     *
+     * Pour chaque niveau, on compare le coût moyen restant si on tente
+     * et si on baisse d'un niveau, puis on garde le moins cher.
+     * Recalculé automatiquement quand les prix changent.
+     */
+
+    let policyCache = {};
+
+    // résolution exacte par « policy iteration » (système linéaire, quelques ms)
+    function solveForge(target, allowDown) {
+
+      const top = Math.min(21, target - 1);
+      const S = [];
+      for (let l = START_LEVEL; l <= top; l++) S.push(l);
+      const idx = l => l - START_LEVEL;
+      const N = S.length;
+
+      // où mène l'arrivée sur le niveau n : null = objectif atteint, sinon un état
+      const dest = n => {
+        if (n >= target) return null;
+        if (chances[n] === undefined) return START_LEVEL; // bloqué : nouvel item
+        return n;
+      };
+
+      // coût immédiat + transitions d'une tentative depuis l
+      function attemptRow(l) {
+        const p = Math.min(chances[l] / 100, 1);
+        let cost = (FEE[l] ?? 0) + A + (1 - p) * F;
+        const tr = [];
+        for (let k = 1; k <= 3; k++) {
+          let n = Math.min(MAX_LEVEL, l + k);
+          if (n === 12 || n === 16 || n === 19) { n--; cost += p / 3 * D; }
+          tr.push([dest(n), p / 3]);
+        }
+        for (let k = 0; k <= 2; k++) tr.push([dest(Math.max(START_LEVEL, l - k)), (1 - p) / 3]);
+        return { cost, tr };
+      }
+
+      const rows = S.map(attemptRow);
+      const down = {};
+      S.forEach(l => { down[l] = false; });
+
+      function evaluate() {
+        // (I - P) V = c
+        const M = S.map(() => new Array(N + 1).fill(0));
+        S.forEach((l, r) => {
+          M[r][r] += 1;
+          if (down[l]) {
+            M[r][idx(l - 1)] -= 1;
+            M[r][N] = D;
+          } else {
+            rows[r].tr.forEach(([n, pr]) => { if (n !== null) M[r][idx(n)] -= pr; });
+            M[r][N] = rows[r].cost;
+          }
+        });
+        // élimination de Gauss
+        for (let c = 0; c < N; c++) {
+          let piv = c;
+          for (let r = c + 1; r < N; r++) if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r;
+          [M[c], M[piv]] = [M[piv], M[c]];
+          for (let r = 0; r < N; r++) {
+            if (r === c) continue;
+            const f = M[r][c] / M[c][c];
+            if (f) for (let k = c; k <= N; k++) M[r][k] -= f * M[c][k];
+          }
+        }
+        return S.map((l, r) => M[r][N] / M[r][r]);
+      }
+
+      let V = evaluate();
+
+      if (allowDown) {
+        for (let it = 0; it < 50; it++) {
+          let changed = false;
+          S.forEach((l, r) => {
+            if (l === START_LEVEL) return;
+            const att = rows[r].cost + rows[r].tr.reduce((s, [n, pr]) => s + pr * (n === null ? 0 : V[idx(n)]), 0);
+            const dn = D + V[idx(l - 1)];
+            const want = dn < att - 1e-6;
+            if (want !== down[l]) { down[l] = want; changed = true; }
+          });
+          if (!changed) break;
+          V = evaluate();
+        }
+      }
+
+      return { cost: V[0], down };
+    }
+
+    function getPolicy(target) {
+      if (!policyCache[target]) {
+        const steps = solveForge(target, true);
+        const all = solveForge(target, false);
+        policyCache[target] = {
+          down: steps.down,
+          list: Object.keys(steps.down).filter(l => steps.down[l]).map(Number),
+          costSteps: steps.cost,
+          costAll: all.cost
+        };
+      }
+      return policyCache[target];
+    }
+
+    function runToTarget(target, down = null) {
 
       let l = START_LEVEL, a = 0, c = 0, f = 0, d = 0, items = 1;
       const lv = newLv();
@@ -1866,6 +2260,14 @@
         if (chances[l] === undefined) {
           l = START_LEVEL;
           items++;
+          continue;
+        }
+
+        // baisse volontaire au palier
+        if (down && down[l]) {
+          l--;
+          c += D;
+          d++;
           continue;
         }
 
@@ -1887,9 +2289,58 @@
      * (découpé en paquets pour ne pas figer la page sur +23 / +24)
      */
 
-    const targetButtons = [...document.querySelectorAll(".targetrow button")];
+    const targetButtons = [...document.querySelectorAll("[data-target]")];
+
+    let calcStrategy = "steps";
+    let simStrategy = "steps";
+    let calcSelected = null;
+
+    // encadré d'info de stratégie (paliers + coût théorique)
+    function stratInfoHTML(target, strategy) {
+      const tr = t();
+      if (!target) return tr.stratPick;
+      const pol = getPolicy(target);
+      const pct = pol.costAll > 0 ? Math.round((1 - pol.costSteps / pol.costAll) * 100) : 0;
+      return (strategy === "steps" ? tr.stratStepsInfo(target, pol.list) : tr.stratAllInfo(target)) +
+        "<br>" + tr.stratTheory(fmtGold(pol.costAll), fmtGold(pol.costSteps), pct);
+    }
+
+    function renderStratInfo() {
+      $("calcStratInfo").innerHTML = stratInfoHTML(calcSelected, calcStrategy);
+      $("simStratInfo").innerHTML = stratInfoHTML(simTarget, simStrategy);
+      document.querySelectorAll("[data-calcstrat]").forEach(b => {
+        b.classList.toggle("active", b.dataset.calcstrat === calcStrategy);
+        b.textContent = b.dataset.calcstrat === "all" ? t().stratAll : t().stratSteps;
+      });
+      document.querySelectorAll("[data-simstrat]").forEach(b => {
+        b.classList.toggle("active", b.dataset.simstrat === simStrategy);
+        b.textContent = b.dataset.simstrat === "all" ? t().stratAll : t().stratSteps;
+      });
+    }
+
+    document.querySelectorAll("[data-calcstrat]").forEach(b => {
+      b.onclick = () => {
+        calcStrategy = b.dataset.calcstrat;
+        renderStratInfo();
+        if (calcSelected) calcCost(calcSelected);
+      };
+    });
+
+    document.querySelectorAll("[data-simstrat]").forEach(b => {
+      b.onclick = () => {
+        if (simRunning) return;
+        simStrategy = b.dataset.simstrat;
+        renderStratInfo();
+      };
+    });
 
     async function calcCost(target) {
+
+      calcSelected = target;
+      const strategy = calcStrategy;
+      const down = strategy === "steps" ? getPolicy(target).down : null;
+      renderStratInfo();
+      document.querySelectorAll("[data-calcstrat]").forEach(b => b.disabled = true);
 
       targetButtons.forEach(b => {
         b.disabled = true;
@@ -1907,7 +2358,7 @@
 
       for (let i = 0; i < CALC_RUNS; i++) {
 
-        results.push(runToTarget(target));
+        results.push(runToTarget(target, down));
 
         if (performance.now() - lastYield > 30) {
           $("calcProgress").style.width = ((i + 1) / CALC_RUNS * 100) + "%";
@@ -1919,9 +2370,10 @@
       $("calcProgress").style.width = "100%";
       setTimeout(() => { $("calcProgressWrap").style.visibility = "hidden"; }, 300);
 
-      lastCalc = { target, one: results[0], results };
+      lastCalc = { target, one: results[0], results, strategy };
 
       targetButtons.forEach(b => { b.disabled = false; });
+      document.querySelectorAll("[data-calcstrat]").forEach(b => b.disabled = false);
 
       renderCalc();
     }
@@ -1952,7 +2404,8 @@
 
       $("heroLabel").textContent = tr.heroLabel(target);
       $("heroValue").textContent = "💰 " + fmtGold(r1.c);
-      $("heroDetail").textContent = tr.heroDetail(r1);
+      $("heroDetail").innerHTML = tr.heroDetail(r1) + "<br>" +
+        tr.stratUsed(lastCalc.strategy === "steps" ? tr.stratNameSteps : tr.stratNameAll);
 
       const costs = results.map(x => x.c).sort((x, y) => x - y);
       const n = results.length;
@@ -1994,7 +2447,9 @@
       simRunning = true;
 
       const target = simTarget;
-      const tr0 = t();
+      const strategy = simStrategy;
+      const down = strategy === "steps" ? getPolicy(target).down : null;
+      document.querySelectorAll("[data-simstrat]").forEach(b => b.disabled = true);
 
       $("simulate").disabled = true;
       simTargetButtons.forEach(b => b.disabled = true);
@@ -2006,7 +2461,7 @@
 
       for (let i = 0; i < 1000; i++) {
 
-        runs.push({ ...runToTarget(target), idx: i + 1 });
+        runs.push({ ...runToTarget(target, down), idx: i + 1 });
 
         if (performance.now() - lastYield > 30) {
           $("simProgress").style.width = ((i + 1) / 10) + "%";
@@ -2021,6 +2476,8 @@
 
       lastSim = runs;
       lastSim.target = target;
+      lastSim.strategy = strategy;
+      document.querySelectorAll("[data-simstrat]").forEach(b => b.disabled = false);
 
       simRunning = false;
       $("simulate").disabled = false;
@@ -2038,6 +2495,7 @@
         simTarget = Number(b.dataset.simtarget);
         simTargetButtons.forEach(x => x.classList.toggle("active", x === b));
         $("simulate").textContent = t().simulateBtn(simTarget);
+        renderStratInfo();
       };
     });
 
@@ -2062,6 +2520,7 @@
       return lastSim.map(x => ({
         run: x.idx,
         target: lastSim.target,
+        strategy: lastSim.strategy,
         attempts: x.a,
         cost_silver: x.c,
         cost_gold: Math.round(x.c / 1000),
@@ -2168,7 +2627,8 @@
         .join(" · ");
 
       $("simmsg").innerHTML =
-        `<b style="color:#e4c57e">${tr.summaryTitle(target)}</b><br><br>` +
+        `<b style="color:#e4c57e">${tr.summaryTitle(target)}</b><br>` +
+        tr.stratUsed(r.strategy === "steps" ? tr.stratNameSteps : tr.stratNameAll) + `<br><br>` +
         `🎯 ${tr.summaryAvg} : <b>${nf(av, L)} ${tr.summaryAttempts}</b>` +
         ` · 💰 ${tr.summaryCostAvg} : <b>${fmtGold(ac)}</b>` +
         `<br><br>` +
@@ -2251,6 +2711,8 @@
       applyStaticText();
       update();
       renderCalc();
+      renderStratInfo();
+      renderAuto();
       renderSimulation();
     };
 
@@ -2326,6 +2788,9 @@
     function onPricesChanged() {
 
       computeCosts();
+      policyCache = {};
+      renderStratInfo();
+      renderAuto();
 
       try { localStorage.setItem("forgePrices", JSON.stringify(prices)); } catch (e) {}
 
@@ -2386,10 +2851,204 @@
 
 
     /*
+     * CRAFT AUTOMATIQUE
+     *
+     * 1 action (tentative ou baisse au palier) toutes les 0,5 s à ×1.
+     * S'arrête dès que l'item atteint +22, +23 ou +24.
+     * Le coût est recalculé à partir des compteurs : il suit les prix.
+     */
+
+    const AUTO_STOP = 22;
+
+    // paliers fixes du craft auto : on baisse à +12, +14, +16 et +19
+    const AUTO_STEPS = [12, 14, 16, 19];
+    const AUTO_DOWN = Object.fromEntries(AUTO_STEPS.map(l => [l, true]));
+    const AUTO_ACTION_SEC = 0.5;
+
+    const autoFresh = () => ({
+      level: START_LEVEL, best: START_LEVEL,
+      actions: 0, attempts: 0, fails: 0, downs: 0,
+      lv: newLv(), done: false, log: []
+    });
+
+    let auto = autoFresh();
+    let autoTimer = null;
+    let autoSpeed = 1;
+
+    const autoCostNow = () =>
+      auto.attempts * A + auto.fails * F + auto.downs * D + feeOf(auto.lv);
+
+    function fmtTime(sec) {
+      sec = Math.round(sec);
+      const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, s = sec % 60;
+      return [h, m, s].map(v => String(v).padStart(2, "0")).join(":");
+    }
+
+    function fmtTimeLong(sec) {
+      sec = Math.round(sec);
+      const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, s = sec % 60;
+      return (h ? h + " h " : "") + (h || m ? m + " min " : "") + s + " s";
+    }
+
+    function autoPush(entry) {
+      auto.log.push(entry);
+      if (auto.log.length > 300) auto.log.shift();
+    }
+
+    function autoStep() {
+
+      if (auto.done) return;
+
+      const down = AUTO_DOWN;
+      const l = auto.level;
+
+      auto.actions++;
+
+      if (down[l]) {
+        auto.level--;
+        auto.downs++;
+        autoPush({ type: "dn", o: l, n: auto.level, c: D, t: auto.actions });
+        auto.flash = "dn";
+      } else {
+        auto.attempts++;
+        auto.lv[l - 11]++;
+        const st = forgeStep(l);
+        auto.level = st.level;
+        if (st.failed) auto.fails++;
+        if (st.downgraded) auto.downs++;
+        autoPush({
+          type: st.failed ? "ko" : st.downgraded ? "okdn" : "ok",
+          o: l, n: st.level, c: st.cost, t: auto.actions
+        });
+        auto.flash = st.failed ? "ko" : "ok";
+      }
+
+      auto.best = Math.max(auto.best, auto.level);
+
+      if (auto.level >= AUTO_STOP) {
+        auto.done = true;
+        autoPush({ type: "end", n: auto.level, t: auto.actions });
+        autoStop();
+      }
+    }
+
+    function autoTick() {
+      const steps = autoSpeed >= 10 ? autoSpeed / 10 : 1;
+      for (let i = 0; i < steps && !auto.done; i++) autoStep();
+      renderAuto();
+    }
+
+    function autoStart() {
+      if (auto.done) auto = autoFresh();
+      autoStop();
+      autoTimer = setInterval(autoTick, autoSpeed >= 10 ? 50 : 500);
+      renderAuto();
+    }
+
+    function autoStop() {
+      if (autoTimer) clearInterval(autoTimer);
+      autoTimer = null;
+    }
+
+    function renderAuto() {
+
+      const tr = t();
+      const L = tr.locale;
+      const silver = v => nf(v, L) + " " + tr.currencyWord;
+
+      $("autoTitle").textContent = tr.autoTitle;
+      $("autoDesc").textContent = tr.autoDesc;
+      $("autoStratInfo").innerHTML = tr.autoStrat(AUTO_STEPS);
+      $("autoItemLabel").textContent = tr.itemName;
+      $("autoChronoSub").textContent = tr.autoChronoSub;
+      $("autoReset").textContent = tr.autoReset;
+      ["Chance", "Attempts", "Formula", "Potion", "Dye", "Down", "Fee", "Best"]
+        .forEach(k => $("autoLbl" + k).textContent = tr["autoLbl" + k]);
+
+      $("autoPlay").textContent =
+        autoTimer ? tr.autoPause :
+        auto.done ? tr.autoAgain :
+        auto.actions > 0 ? tr.autoResume : tr.autoPlay;
+
+      $("autoLevel").textContent = "+" + auto.level;
+      $("autoChrono").textContent = fmtTime(auto.actions * AUTO_ACTION_SEC);
+      $("autoCost").textContent = "💰 " + fmtGold(autoCostNow());
+
+      $("autoChance").textContent = auto.done
+        ? tr.stop
+        : String(chances[auto.level]).replace(".", lang === "fr" ? "," : ".") + " %";
+      $("autoAttempts").textContent = nf(auto.attempts, L);
+      $("autoFormula").textContent = nf(auto.attempts, L);
+      $("autoPotion").textContent = nf(auto.attempts, L);
+      $("autoDye").textContent = nf(auto.fails, L);
+      $("autoDown").textContent = nf(auto.downs, L);
+      $("autoFee").textContent = silver(feeOf(auto.lv));
+      $("autoBest").textContent = "+" + auto.best;
+
+      // journal (le plus récent en haut)
+      $("autoLog").innerHTML = auto.log.slice(-80).reverse().map(e => {
+        const time = `<span class="t">${fmtTime(e.t * AUTO_ACTION_SEC)}</span>`;
+        if (e.type === "end") return `<div class="end">${time}${tr.logEnd(e.n)}</div>`;
+        const fn = { ok: tr.logOk, okdn: tr.logOkDown, ko: tr.logKo, dn: tr.logDown }[e.type];
+        const cls = { ok: "ok", okdn: "ok", ko: "ko", dn: "dn" }[e.type];
+        return `<div class="${cls}">${time}${fn(e.o, e.n, silver(e.c))}</div>`;
+      }).join("");
+
+      // message
+      if (auto.done) {
+        $("autoMsg").innerHTML = `<b style="color:#63cf8f">${tr.autoDone(
+          auto.level, fmtTimeLong(auto.actions * AUTO_ACTION_SEC),
+          fmtGold(autoCostNow()), nf(auto.attempts, L))}</b>`;
+      } else if (autoTimer) {
+        $("autoMsg").textContent = tr.autoRunning(autoSpeed);
+      } else {
+        $("autoMsg").textContent = auto.actions > 0 ? tr.autoPaused : tr.autoIdle;
+      }
+
+      // effet visuel (seulement aux vitesses lentes)
+      const screen = $("autoScreen");
+      screen.classList.remove("flash-ok", "flash-ko", "flash-dn");
+      screen.classList.toggle("done", auto.done);
+      if (auto.flash && autoSpeed <= 10 && !auto.done) {
+        screen.classList.add("flash-" + auto.flash);
+        clearTimeout(screen._ft);
+        screen._ft = setTimeout(() => screen.classList.remove("flash-ok", "flash-ko", "flash-dn"), autoSpeed === 1 ? 300 : 40);
+      }
+      auto.flash = null;
+    }
+
+    $("autoPlay").onclick = () => {
+      if (autoTimer) {
+        autoStop();
+        renderAuto();
+      } else {
+        autoStart();
+      }
+    };
+
+    $("autoReset").onclick = () => {
+      autoStop();
+      auto = autoFresh();
+      renderAuto();
+    };
+
+    document.querySelectorAll("[data-speed]").forEach(b => {
+      b.onclick = () => {
+        autoSpeed = Number(b.dataset.speed);
+        document.querySelectorAll("[data-speed]").forEach(x => x.classList.toggle("active", x === b));
+        if (autoTimer) autoStart();
+        else renderAuto();
+      };
+    });
+
+
+    /*
      * INITIALISATION
      */
 
     fillPriceInputs();
+    renderStratInfo();
+    renderAuto();
 
     applyStaticText();
     update();
