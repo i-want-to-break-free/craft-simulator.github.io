@@ -1145,6 +1145,11 @@
 
       <h2 id="autoTitle">Craft automatique</h2>
       <p class="desc" id="autoDesc"></p>
+      <div class="stratrow" id="autoModeRow">
+        <button class="secondary active" data-automode="22">🎯 Arrêt à +22, +23 ou +24</button>
+        <button class="secondary" data-automode="23">🎯 Arrêt à +23 ou +24</button>
+      </div>
+
       <div class="stratinfo" id="autoStratInfo"></div>
 
       <div class="autogrid">
@@ -1181,6 +1186,7 @@
             <div class="stat"><small id="autoLblDown">⬇️ Baisses</small><b id="autoDown">0</b></div>
             <div class="stat"><small id="autoLblFee">💵 Prix tentatives</small><b id="autoFee">0</b></div>
             <div class="stat"><small id="autoLblBest">🏅 Meilleur</small><b id="autoBest">+11</b></div>
+            <div class="stat" style="grid-column: 1 / -1; min-height: 0;"><small id="autoLblItems">🔁 Items utilisés</small><b id="autoItems">1</b></div>
           </div>
           <div class="autolog" id="autoLog"></div>
         </div>
@@ -1202,6 +1208,7 @@
               <th id="hThAttempts">🎯 Tentatives</th>
               <th id="hThDyes">🎨 Teintures</th>
               <th id="hThDowns">⬇️ Baisses</th>
+              <th id="hThItems">🔁 Items</th>
               <th id="hThCost">💰 Coût</th>
               <th id="hThDate">📅 Date</th>
             </tr>
@@ -1579,7 +1586,7 @@
         stratUsed: (name) => `Stratégie : <b>${name}</b>`,
         histTitle: "Historique des crafts",
         hThN: "N°", hThLevel: "🏆 Résultat", hThTime: "⏱ Temps", hThAttempts: "🎯 Tentatives",
-        hThDyes: "🎨 Teintures", hThDowns: "⬇️ Baisses", hThCost: "💰 Coût", hThDate: "📅 Date",
+        hThDyes: "🎨 Teintures", hThDowns: "⬇️ Baisses", hThItems: "🔁 Items", hThCost: "💰 Coût", hThDate: "📅 Date",
         histCsv: "⬇ Télécharger l'historique (CSV)",
         histClear: "🗑 Effacer l'historique",
         histConfirm: "Effacer tout l'historique des crafts ?",
@@ -1589,7 +1596,14 @@
           `+22 : <b>${c22}</b> · +23 : <b>${c23}</b> · +24 : <b>${c24}</b><br>` +
           `💰 Coût moyen : <b>${avgCost}</b> · ⏱ Temps moyen : <b>${avgTime}</b> · 💸 Total dépensé : <b>${total}</b>`,
         autoTitle: "Craft automatique",
-        autoDesc: "Appuie sur Lecture : le craft part de +11 et fait une action toutes les 0,5 seconde (tentative ou baisse au palier). Il s'arrête tout seul dès que l'item arrive à +22, +23 ou +24. Le chrono compte le temps de jeu (1 action = 0,5 s), même en vitesse accélérée.",
+        autoDesc: (stop) => stop === 23
+          ? "Appuie sur Lecture : le craft part de +11 et fait une action toutes les 0,5 seconde (tentative ou baisse au palier). Il s'arrête tout seul à +23 ou +24. Si l'item tombe sur +22, il est bloqué (pas de taux) : on repart d'un nouvel item à +11, l'argent dépensé reste compté. Le chrono compte le temps de jeu (1 action = 0,5 s), même en vitesse accélérée."
+          : "Appuie sur Lecture : le craft part de +11 et fait une action toutes les 0,5 seconde (tentative ou baisse au palier). Il s'arrête tout seul dès que l'item arrive à +22, +23 ou +24. Le chrono compte le temps de jeu (1 action = 0,5 s), même en vitesse accélérée.",
+        autoMode22: "🎯 Arrêt à +22, +23 ou +24",
+        autoMode23: "🎯 Arrêt à +23 ou +24",
+        autoLblItems: "🔁 Items utilisés",
+        logStuck: (n) => `⛔ Bloqué à +${n} : nouvel item à +11`,
+        autoItemsNote: (n) => ` · ${n} items utilisés`,
         autoStrat: (list) => list.length
           ? `Paliers respectés : ${list.map(l => `<b>+${l} → +${l - 1}</b>`).join(" · ")}. On tente partout ailleurs.`
           : `Aucun palier rentable avec ces prix : on tente partout.`,
@@ -1747,7 +1761,7 @@
         stratUsed: (name) => `Strategy: <b>${name}</b>`,
         histTitle: "Craft history",
         hThN: "No.", hThLevel: "🏆 Result", hThTime: "⏱ Time", hThAttempts: "🎯 Attempts",
-        hThDyes: "🎨 Dyes", hThDowns: "⬇️ Downgrades", hThCost: "💰 Cost", hThDate: "📅 Date",
+        hThDyes: "🎨 Dyes", hThDowns: "⬇️ Downgrades", hThItems: "🔁 Items", hThCost: "💰 Cost", hThDate: "📅 Date",
         histCsv: "⬇ Download history (CSV)",
         histClear: "🗑 Clear history",
         histConfirm: "Clear the whole craft history?",
@@ -1757,7 +1771,14 @@
           `+22: <b>${c22}</b> · +23: <b>${c23}</b> · +24: <b>${c24}</b><br>` +
           `💰 Average cost: <b>${avgCost}</b> · ⏱ Average time: <b>${avgTime}</b> · 💸 Total spent: <b>${total}</b>`,
         autoTitle: "Auto craft",
-        autoDesc: "Press Play: crafting starts at +11 and performs one action every 0.5 second (attempt or step downgrade). It stops by itself as soon as the item reaches +22, +23 or +24. The timer counts game time (1 action = 0.5 s), even at higher speed.",
+        autoDesc: (stop) => stop === 23
+          ? "Press Play: crafting starts at +11 and performs one action every 0.5 second (attempt or step downgrade). It stops by itself at +23 or +24. If the item lands on +22, it's stuck (no rate): a new item starts at +11, and the silver already spent is kept. The timer counts game time (1 action = 0.5 s), even at higher speed."
+          : "Press Play: crafting starts at +11 and performs one action every 0.5 second (attempt or step downgrade). It stops by itself as soon as the item reaches +22, +23 or +24. The timer counts game time (1 action = 0.5 s), even at higher speed.",
+        autoMode22: "🎯 Stop at +22, +23 or +24",
+        autoMode23: "🎯 Stop at +23 or +24",
+        autoLblItems: "🔁 Items used",
+        logStuck: (n) => `⛔ Stuck at +${n}: new item at +11`,
+        autoItemsNote: (n) => ` · ${n} items used`,
         autoStrat: (list) => list.length
           ? `Steps applied: ${list.map(l => `<b>+${l} → +${l - 1}</b>`).join(" · ")}. Attempt everywhere else.`
           : `No profitable step with these prices: attempt everywhere.`,
@@ -2906,14 +2927,15 @@
      * Le coût est recalculé à partir des compteurs : il suit les prix.
      */
 
-    const AUTO_STOP = 22;
-
     // paliers fixes du craft auto : on baisse à +12, +14, +16 et +19
     const AUTO_STEPS = [12, 14, 16, 19];
     const AUTO_DOWN = Object.fromEntries(AUTO_STEPS.map(l => [l, true]));
     const AUTO_ACTION_SEC = 0.5;
 
+    let autoMode = 22; // 22 = arrêt à +22/+23/+24 · 23 = arrêt à +23/+24
+
     const autoFresh = () => ({
+      stop: autoMode, items: 1,
       level: START_LEVEL, best: START_LEVEL,
       actions: 0, attempts: 0, fails: 0, downs: 0,
       lv: newLv(), done: false, log: []
@@ -2987,7 +3009,14 @@
 
       auto.best = Math.max(auto.best, auto.level);
 
-      if (auto.level >= AUTO_STOP) {
+      // bloqué sur un niveau sans taux (+22 en mode +23/+24) : nouvel item
+      if (auto.level < auto.stop && chances[auto.level] === undefined) {
+        autoPush({ type: "stuck", n: auto.level, t: auto.actions });
+        auto.level = START_LEVEL;
+        auto.items++;
+      }
+
+      if (auto.level >= auto.stop) {
         auto.done = true;
         autoPush({ type: "end", n: auto.level, t: auto.actions });
         autoHistory.push({
@@ -2997,6 +3026,8 @@
           attempts: auto.attempts,
           fails: auto.fails,
           downs: auto.downs,
+          items: auto.items,
+          stop: auto.stop,
           lv: auto.lv.slice(),
           date: Date.now()
         });
@@ -3030,7 +3061,14 @@
       const silver = v => nf(v, L) + " " + tr.currencyWord;
 
       $("autoTitle").textContent = tr.autoTitle;
-      $("autoDesc").textContent = tr.autoDesc;
+      $("autoDesc").textContent = tr.autoDesc(auto.stop);
+      document.querySelectorAll("[data-automode]").forEach(b => {
+        b.textContent = b.dataset.automode === "23" ? tr.autoMode23 : tr.autoMode22;
+        b.classList.toggle("active", Number(b.dataset.automode) === autoMode);
+        b.disabled = !!autoTimer;
+      });
+      $("autoLblItems").textContent = tr.autoLblItems;
+      $("autoItems").textContent = nf(auto.items, tr.locale);
       $("autoStratInfo").innerHTML = tr.autoStrat(AUTO_STEPS);
       $("autoItemLabel").textContent = tr.itemName;
       $("autoChronoSub").textContent = tr.autoChronoSub;
@@ -3062,6 +3100,7 @@
       $("autoLog").innerHTML = auto.log.slice(-80).reverse().map(e => {
         const time = `<span class="t">${fmtTime(e.t * AUTO_ACTION_SEC)}</span>`;
         if (e.type === "end") return `<div class="end">${time}${tr.logEnd(e.n)}</div>`;
+        if (e.type === "stuck") return `<div class="ko">${time}${tr.logStuck(e.n)}</div>`;
         const fn = { ok: tr.logOk, okdn: tr.logOkDown, ko: tr.logKo, dn: tr.logDown }[e.type];
         const cls = { ok: "ok", okdn: "ok", ko: "ko", dn: "dn" }[e.type];
         return `<div class="${cls}">${time}${fn(e.o, e.n, silver(e.c))}</div>`;
@@ -3071,7 +3110,8 @@
       if (auto.done) {
         $("autoMsg").innerHTML = `<b style="color:#63cf8f">${tr.autoDone(
           auto.level, fmtTimeLong(auto.actions * AUTO_ACTION_SEC),
-          fmtGold(autoCostNow()), nf(auto.attempts, L))}</b>`;
+          fmtGold(autoCostNow()), nf(auto.attempts, L)) +
+          (auto.items > 1 ? tr.autoItemsNote(nf(auto.items, L)) : "")}</b>`;
       } else if (autoTimer) {
         $("autoMsg").textContent = tr.autoRunning(autoSpeed);
       } else {
@@ -3098,7 +3138,7 @@
       const L = tr.locale;
 
       $("histTitle").textContent = tr.histTitle;
-      ["hThN", "hThLevel", "hThTime", "hThAttempts", "hThDyes", "hThDowns", "hThCost", "hThDate"]
+      ["hThN", "hThLevel", "hThTime", "hThAttempts", "hThDyes", "hThDowns", "hThItems", "hThCost", "hThDate"]
         .forEach(id => $(id).textContent = tr[id]);
       $("histCsv").textContent = tr.histCsv;
       $("histClear").textContent = tr.histClear;
@@ -3134,6 +3174,7 @@
           <td>${nf(h.attempts, L)}</td>
           <td>${nf(h.fails, L)}</td>
           <td>${nf(h.downs, L)}</td>
+          <td>${h.items ?? 1}</td>
           <td>${fmtGold(c)}</td>
           <td>${fmtDate(h.date)}</td>
         </tr>`
@@ -3151,11 +3192,11 @@
     $("histCsv").onclick = () => {
       if (!autoHistory.length) return;
       const header = ["craft", "result", "time_seconds", "attempts", "formulas", "potions", "dyes",
-        "downgrades", "attempt_prices_silver", "cost_silver", "cost_gold", "date"];
+        "downgrades", "items_used", "stop_mode", "attempt_prices_silver", "cost_silver", "cost_gold", "date"];
       const lines = autoHistory.map(h => {
         const c = histCost(h);
         return [h.n, h.level, h.actions * AUTO_ACTION_SEC, h.attempts, h.attempts, h.attempts, h.fails,
-          h.downs, feeOf(h.lv), c, Math.round(c / 1000), new Date(h.date).toISOString()].join(",");
+          h.downs, h.items ?? 1, (h.stop ?? 22) === 23 ? "23-24" : "22-24", feeOf(h.lv), c, Math.round(c / 1000), new Date(h.date).toISOString()].join(",");
       });
       downloadFile("forge-craft-history.csv", [header.join(","), ...lines].join("\n"), "text/csv;charset=utf-8;");
     };
@@ -3168,6 +3209,16 @@
         autoStart();
       }
     };
+
+    document.querySelectorAll("[data-automode]").forEach(b => {
+      b.onclick = () => {
+        if (autoTimer) return;
+        autoMode = Number(b.dataset.automode);
+        // un craft en pause ou terminé repart avec le nouveau mode
+        auto = autoFresh();
+        renderAuto();
+      };
+    });
 
     $("autoReset").onclick = () => {
       autoStop();
