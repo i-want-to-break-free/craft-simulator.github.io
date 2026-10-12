@@ -830,9 +830,22 @@
 
     .budgetinputs input:focus { outline: none; border-color: #f0cf75; }
 
+    .moderow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .moderow button.active {
+      background: linear-gradient(180deg, #a84a20, #702010);
+      border-color: #f0cf75;
+      box-shadow: inset 0 1px #f5c27b55, 0 0 0 1px #3b160d, 0 0 18px #e64b2066, 0 7px 18px #0009;
+    }
+
     .budgetres {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 10px;
       margin-top: 14px;
     }
@@ -842,7 +855,8 @@
     .budgetres .big em { display: block; margin-top: 4px; color: #c4ad82; font-size: 12px; font-style: normal; }
 
     @media(max-width:850px) {
-      .budgetres { grid-template-columns: 1fr; }
+      .budgetres { grid-template-columns: repeat(3, 1fr); }
+      .moderow { grid-template-columns: repeat(2, 1fr); }
     }
 
     .calcHero {
@@ -1201,11 +1215,18 @@
 
       <h2 id="autoTitle">Craft automatique</h2>
       <p class="desc" id="autoDesc"></p>
-      <div class="stratrow" id="autoModeRow">
-        <button class="secondary active" data-automode="22">🎯 Arrêt à +22, +23 ou +24</button>
-        <button class="secondary" data-automode="23">🎯 Arrêt à +23 ou +24</button>
+      <p class="desc" id="autoModeLabel" style="margin:12px 0 0;">Objectif :</p>
+      <div class="moderow" id="autoModeRow">
+        <button class="secondary" data-automode="20">Arrêt à +20 / +21</button>
+        <button class="secondary active" data-automode="22">Arrêt à +22</button>
+        <button class="secondary" data-automode="23">Arrêt à +23 / +24</button>
+        <button class="secondary" data-automode="24">Arrêt à +24</button>
       </div>
 
+      <div class="stratrow" id="autoStratRow">
+        <button class="secondary" data-autostrat="all">⚒ Tout tenter</button>
+        <button class="secondary active" data-autostrat="steps">📉 Baisser aux paliers</button>
+      </div>
       <div class="stratinfo" id="autoStratInfo"></div>
 
       <div class="autogrid">
@@ -1265,6 +1286,7 @@
               <th id="hThDyes">🎨 Teintures</th>
               <th id="hThDowns">⬇️ Baisses</th>
               <th id="hThItems">🔁 Items</th>
+              <th id="hThStrat">📉 Stratégie</th>
               <th id="hThCost">💰 Coût</th>
               <th id="hThDate">📅 Date</th>
             </tr>
@@ -1292,9 +1314,25 @@
         <label class="main"><span id="budLblBudget">💰 Budget (or)</span><input type="number" id="budBudget" min="0" step="100" value="10000"></label>
       </div>
 
+      <p class="desc" id="budModeLabel" style="margin:12px 0 0;">Objectif :</p>
+      <div class="moderow" id="budModeRow">
+        <button class="secondary" data-budmode="20">Arrêt à +20 / +21</button>
+        <button class="secondary active" data-budmode="22">Arrêt à +22</button>
+        <button class="secondary" data-budmode="23">Arrêt à +23 / +24</button>
+        <button class="secondary" data-budmode="24">Arrêt à +24</button>
+      </div>
+
+      <div class="stratrow" id="budStratRow">
+        <button class="secondary" data-budstrat="all">⚒ Tout tenter</button>
+        <button class="secondary active" data-budstrat="steps">📉 Baisser aux paliers</button>
+      </div>
+      <div class="stratinfo" id="budStratInfo"></div>
+
       <button class="primary full" id="budRun" style="margin-top:12px;">⚔ Lancer le craft</button>
 
       <div class="budgetres">
+        <div class="big"><span>+20</span><strong id="bud20">—</strong></div>
+        <div class="big"><span>+21</span><strong id="bud21">—</strong></div>
         <div class="big"><span>+22</span><strong id="bud22">—</strong></div>
         <div class="big"><span>+23</span><strong id="bud23">—</strong></div>
         <div class="big"><span>+24</span><strong id="bud24">—</strong></div>
@@ -1684,7 +1722,16 @@
           `Coût moyen théorique : tout tenter <b>${all}</b> · paliers <b>${steps}</b> · économie <b>${pct} %</b>`,
         stratUsed: (name) => `Stratégie : <b>${name}</b>`,
         budTitle: "Combien d'items avec mon budget ?",
-        budDesc: "Entre ton budget de forge et lance : comme le craft automatique, chaque item part de +11 et est forgé jusqu'à +22, +23 ou +24 avec les paliers (+12, +14, +16, +19), puis on enchaîne avec un nouvel item jusqu'à ce que l'or soit épuisé. Seuls les coûts de forge comptent. Tu obtiens la liste de tous les items craftés.",
+        budDesc: (stop) => `Choisis ton objectif, entre ton budget de forge et lance : comme le craft automatique, chaque item part de +11 et est forgé ${({
+            20: "jusqu'à +20 ou +21 (ou plus haut)",
+            22: "jusqu'à +22 (ou plus haut)",
+            23: "jusqu'à +23 (ou +24)",
+            24: "jusqu'à +24"
+          })[stop]} (avec ou sans les paliers, au choix), puis on enchaîne avec un nouvel item jusqu'à ce que l'or soit épuisé.` +
+          (stop >= 23 ? ` Un item bloqué à ${stop === 24 ? "+22 ou +23" : "+22"} (pas de taux) reste dans la liste comme item bloqué.` : "") +
+          " Seuls les coûts de forge comptent. Tu obtiens la liste de tous les items craftés.",
+        modeLabel: "Objectif :",
+        budStuck: "(bloqué)",
         budLblBudget: "💰 Budget (or)",
         budRun: "⚔ Lancer le craft",
         budAgain: "⚔ Relancer",
@@ -1692,7 +1739,8 @@
         budSummary: (o) =>
           `<b style="color:#e4c57e">✦ Budget ${o.budget} épuisé : ${o.count} item${o.count > 1 ? "s" : ""} crafté${o.count > 1 ? "s" : ""}</b><br><br>` +
           `💸 Dépensé : <b>${o.spent}</b> · reste : <b>${o.left}</b><br>` +
-          `⏱ Temps de jeu total : <b>${o.time}</b> (1 action = 0,5 s)` +
+          `⏱ Temps de jeu total : <b>${o.time}</b> (1 action = 0,5 s)<br>` +
+          `📉 Stratégie : <b>${o.strat}</b>` +
           (o.partial ? `<br>⏳ Le dernier item s'est arrêté à <b>+${o.partial}</b> faute d'or (pas compté dans les résultats).` : ""),
         bThN: "N°", bThLevel: "🏆 Résultat", bThAttempts: "🎯 Tentatives", bThDyes: "🎨 Teintures",
         bThDowns: "⬇️ Baisses", bThTime: "⏱ Temps", bThCost: "💰 Coût",
@@ -1700,21 +1748,27 @@
         budNotEnough: "Budget trop faible pour forger.",
         histTitle: "Historique des crafts",
         hThN: "N°", hThLevel: "🏆 Résultat", hThTime: "⏱ Temps", hThAttempts: "🎯 Tentatives",
-        hThDyes: "🎨 Teintures", hThDowns: "⬇️ Baisses", hThItems: "🔁 Items", hThCost: "💰 Coût", hThDate: "📅 Date",
+        hThDyes: "🎨 Teintures", hThDowns: "⬇️ Baisses", hThItems: "🔁 Items", hThStrat: "📉 Stratégie", hThCost: "💰 Coût",
+        stratShortAll: "Tout tenter", stratShortSteps: "Paliers",
+        noStepsInfo: "Tout tenter : on tente à chaque niveau, sans aucune baisse volontaire (seules les baisses automatiques à +12, +16 et +19 restent).", hThDate: "📅 Date",
         histCsv: "⬇ Télécharger l'historique (CSV)",
         histClear: "🗑 Effacer l'historique",
         histConfirm: "Effacer tout l'historique des crafts ?",
         histEmpty: "Aucun craft terminé pour l'instant. Chaque craft terminé s'enregistre ici automatiquement.",
-        histSummary: (n, c22, c23, c24, avgCost, avgTime, total) =>
+        histSummary: (n, counts, avgCost, avgTime, total) =>
           `📜 <b>${n}</b> craft${n > 1 ? "s" : ""} terminé${n > 1 ? "s" : ""} · ` +
-          `+22 : <b>${c22}</b> · +23 : <b>${c23}</b> · +24 : <b>${c24}</b><br>` +
+          [20, 21, 22, 23, 24].map(l => `+${l} : <b>${counts[l]}</b>`).join(" · ") + `<br>` +
           `💰 Coût moyen : <b>${avgCost}</b> · ⏱ Temps moyen : <b>${avgTime}</b> · 💸 Total dépensé : <b>${total}</b>`,
         autoTitle: "Craft automatique",
-        autoDesc: (stop) => stop === 23
-          ? "Appuie sur Lecture : le craft part de +11 et fait une action toutes les 0,5 seconde (tentative ou baisse au palier). Il s'arrête tout seul à +23 ou +24. Si l'item tombe sur +22, il est bloqué (pas de taux) : on repart d'un nouvel item à +11, l'argent dépensé reste compté. Le chrono compte le temps de jeu (1 action = 0,5 s), même en vitesse accélérée."
-          : "Appuie sur Lecture : le craft part de +11 et fait une action toutes les 0,5 seconde (tentative ou baisse au palier). Il s'arrête tout seul dès que l'item arrive à +22, +23 ou +24. Le chrono compte le temps de jeu (1 action = 0,5 s), même en vitesse accélérée.",
-        autoMode22: "🎯 Arrêt à +22, +23 ou +24",
-        autoMode23: "🎯 Arrêt à +23 ou +24",
+        autoDesc: (stop) => `Appuie sur Lecture : le craft part de +11 et fait une action toutes les 0,5 seconde (tentative ou baisse au palier). Il s'arrête tout seul ${({
+            20: "dès que l'item atteint +20 ou +21 (ou plus haut)",
+            22: "dès que l'item atteint +22 (ou plus haut)",
+            23: "dès que l'item atteint +23 (ou +24)",
+            24: "uniquement quand l'item atteint +24"
+          })[stop]}.` +
+          (stop >= 23 ? ` Si l'item tombe sur ${stop === 24 ? "+22 ou +23" : "+22"} avant, il est bloqué (pas de taux) : on repart d'un nouvel item à +11, l'argent dépensé reste compté.` : "") +
+          " Le chrono compte le temps de jeu (1 action = 0,5 s), même en vitesse accélérée.",
+        modeNames: { 20: "Arrêt à +20 / +21", 22: "Arrêt à +22", 23: "Arrêt à +23 / +24", 24: "Arrêt à +24" },
         autoLblItems: "🔁 Items utilisés",
         logStuck: (n) => `⛔ Bloqué à +${n} : nouvel item à +11`,
         autoItemsNote: (n) => ` · ${n} items utilisés`,
@@ -1874,7 +1928,16 @@
           `Theoretical average cost: attempt everything <b>${all}</b> · steps <b>${steps}</b> · savings <b>${pct}%</b>`,
         stratUsed: (name) => `Strategy: <b>${name}</b>`,
         budTitle: "How many items with my budget?",
-        budDesc: "Enter your forging budget and start: like the auto craft, every item starts at +11 and is forged up to +22, +23 or +24 using the steps (+12, +14, +16, +19), then a new item follows until the gold runs out. Only forging costs count. You get the list of every crafted item.",
+        budDesc: (stop) => `Pick your target, enter your forging budget and start: like the auto craft, every item starts at +11 and is forged ${({
+            20: "up to +20 or +21 (or higher)",
+            22: "up to +22 (or higher)",
+            23: "up to +23 (or +24)",
+            24: "up to +24"
+          })[stop]} (with or without the steps, your choice), then a new item follows until the gold runs out.` +
+          (stop >= 23 ? ` An item stuck at ${stop === 24 ? "+22 or +23" : "+22"} (no rate) stays in the list as a stuck item.` : "") +
+          " Only forging costs count. You get the list of every crafted item.",
+        modeLabel: "Target:",
+        budStuck: "(stuck)",
         budLblBudget: "💰 Budget (gold)",
         budRun: "⚔ Start crafting",
         budAgain: "⚔ Run again",
@@ -1882,7 +1945,8 @@
         budSummary: (o) =>
           `<b style="color:#e4c57e">✦ Budget ${o.budget} spent: ${o.count} item${o.count > 1 ? "s" : ""} crafted</b><br><br>` +
           `💸 Spent: <b>${o.spent}</b> · left: <b>${o.left}</b><br>` +
-          `⏱ Total game time: <b>${o.time}</b> (1 action = 0.5 s)` +
+          `⏱ Total game time: <b>${o.time}</b> (1 action = 0.5 s)<br>` +
+          `📉 Strategy: <b>${o.strat}</b>` +
           (o.partial ? `<br>⏳ The last item stopped at <b>+${o.partial}</b> for lack of gold (not counted in the results).` : ""),
         bThN: "No.", bThLevel: "🏆 Result", bThAttempts: "🎯 Attempts", bThDyes: "🎨 Dyes",
         bThDowns: "⬇️ Downgrades", bThTime: "⏱ Time", bThCost: "💰 Cost",
@@ -1890,21 +1954,27 @@
         budNotEnough: "Budget too low to forge.",
         histTitle: "Craft history",
         hThN: "No.", hThLevel: "🏆 Result", hThTime: "⏱ Time", hThAttempts: "🎯 Attempts",
-        hThDyes: "🎨 Dyes", hThDowns: "⬇️ Downgrades", hThItems: "🔁 Items", hThCost: "💰 Cost", hThDate: "📅 Date",
+        hThDyes: "🎨 Dyes", hThDowns: "⬇️ Downgrades", hThItems: "🔁 Items", hThStrat: "📉 Strategy", hThCost: "💰 Cost",
+        stratShortAll: "Attempt all", stratShortSteps: "Steps",
+        noStepsInfo: "Attempt everything: attempt at every level, with no voluntary downgrade (only the automatic downgrades at +12, +16 and +19 remain).", hThDate: "📅 Date",
         histCsv: "⬇ Download history (CSV)",
         histClear: "🗑 Clear history",
         histConfirm: "Clear the whole craft history?",
         histEmpty: "No finished craft yet. Every finished craft is saved here automatically.",
-        histSummary: (n, c22, c23, c24, avgCost, avgTime, total) =>
+        histSummary: (n, counts, avgCost, avgTime, total) =>
           `📜 <b>${n}</b> finished craft${n > 1 ? "s" : ""} · ` +
-          `+22: <b>${c22}</b> · +23: <b>${c23}</b> · +24: <b>${c24}</b><br>` +
+          [20, 21, 22, 23, 24].map(l => `+${l}: <b>${counts[l]}</b>`).join(" · ") + `<br>` +
           `💰 Average cost: <b>${avgCost}</b> · ⏱ Average time: <b>${avgTime}</b> · 💸 Total spent: <b>${total}</b>`,
         autoTitle: "Auto craft",
-        autoDesc: (stop) => stop === 23
-          ? "Press Play: crafting starts at +11 and performs one action every 0.5 second (attempt or step downgrade). It stops by itself at +23 or +24. If the item lands on +22, it's stuck (no rate): a new item starts at +11, and the silver already spent is kept. The timer counts game time (1 action = 0.5 s), even at higher speed."
-          : "Press Play: crafting starts at +11 and performs one action every 0.5 second (attempt or step downgrade). It stops by itself as soon as the item reaches +22, +23 or +24. The timer counts game time (1 action = 0.5 s), even at higher speed.",
-        autoMode22: "🎯 Stop at +22, +23 or +24",
-        autoMode23: "🎯 Stop at +23 or +24",
+        autoDesc: (stop) => `Press Play: crafting starts at +11 and performs one action every 0.5 second (attempt or step downgrade). It stops by itself ${({
+            20: "as soon as the item reaches +20 or +21 (or higher)",
+            22: "as soon as the item reaches +22 (or higher)",
+            23: "as soon as the item reaches +23 (or +24)",
+            24: "only when the item reaches +24"
+          })[stop]}.` +
+          (stop >= 23 ? ` If the item lands on ${stop === 24 ? "+22 or +23" : "+22"} first, it's stuck (no rate): a new item starts at +11, and the silver already spent is kept.` : "") +
+          " The timer counts game time (1 action = 0.5 s), even at higher speed.",
+        modeNames: { 20: "Stop at +20 / +21", 22: "Stop at +22", 23: "Stop at +23 / +24", 24: "Stop at +24" },
         autoLblItems: "🔁 Items used",
         logStuck: (n) => `⛔ Stuck at +${n}: new item at +11`,
         autoItemsNote: (n) => ` · ${n} items used`,
@@ -3063,10 +3133,11 @@
     const AUTO_DOWN = Object.fromEntries(AUTO_STEPS.map(l => [l, true]));
     const AUTO_ACTION_SEC = 0.5;
 
-    let autoMode = 22; // 22 = arrêt à +22/+23/+24 · 23 = arrêt à +23/+24
+    let autoSteps = true; // true = baisser aux paliers · false = tout tenter
+    let autoMode = 22; // arrêt dès que l'item atteint +autoMode ou plus (20, 22, 23 ou 24)
 
     const autoFresh = () => ({
-      stop: autoMode, items: 1,
+      stop: autoMode, steps: autoSteps, items: 1,
       level: START_LEVEL, best: START_LEVEL,
       actions: 0, attempts: 0, fails: 0, downs: 0,
       lv: newLv(), done: false, log: []
@@ -3114,7 +3185,7 @@
 
       if (auto.done) return;
 
-      const down = AUTO_DOWN;
+      const down = auto.steps ? AUTO_DOWN : {};
       const l = auto.level;
 
       auto.actions++;
@@ -3158,6 +3229,7 @@
           fails: auto.fails,
           downs: auto.downs,
           items: auto.items,
+          steps: auto.steps,
           stop: auto.stop,
           lv: auto.lv.slice(),
           date: Date.now()
@@ -3193,14 +3265,20 @@
 
       $("autoTitle").textContent = tr.autoTitle;
       $("autoDesc").textContent = tr.autoDesc(auto.stop);
+      $("autoModeLabel").textContent = tr.modeLabel;
+      document.querySelectorAll("[data-automode]").forEach(b => b.textContent = tr.modeNames[b.dataset.automode]);
       document.querySelectorAll("[data-automode]").forEach(b => {
-        b.textContent = b.dataset.automode === "23" ? tr.autoMode23 : tr.autoMode22;
         b.classList.toggle("active", Number(b.dataset.automode) === autoMode);
         b.disabled = !!autoTimer;
       });
       $("autoLblItems").textContent = tr.autoLblItems;
       $("autoItems").textContent = nf(auto.items, tr.locale);
-      $("autoStratInfo").innerHTML = tr.autoStrat(AUTO_STEPS);
+      $("autoStratInfo").innerHTML = auto.steps ? tr.autoStrat(AUTO_STEPS) : tr.noStepsInfo;
+      document.querySelectorAll("[data-autostrat]").forEach(b => {
+        b.textContent = b.dataset.autostrat === "all" ? tr.stratAll : tr.stratSteps;
+        b.classList.toggle("active", (b.dataset.autostrat === "steps") === autoSteps);
+        b.disabled = !!autoTimer;
+      });
       $("autoItemLabel").textContent = tr.itemName;
       $("autoChronoSub").textContent = tr.autoChronoSub;
       $("autoReset").textContent = tr.autoReset;
@@ -3269,7 +3347,7 @@
       const L = tr.locale;
 
       $("histTitle").textContent = tr.histTitle;
-      ["hThN", "hThLevel", "hThTime", "hThAttempts", "hThDyes", "hThDowns", "hThItems", "hThCost", "hThDate"]
+      ["hThN", "hThLevel", "hThTime", "hThAttempts", "hThDyes", "hThDowns", "hThItems", "hThStrat", "hThCost", "hThDate"]
         .forEach(id => $(id).textContent = tr[id]);
       $("histCsv").textContent = tr.histCsv;
       $("histClear").textContent = tr.histClear;
@@ -3289,7 +3367,7 @@
       const count = lvl => autoHistory.filter(h => h.level === lvl).length;
 
       $("histSummary").innerHTML = tr.histSummary(
-        n, count(22), count(23), count(24),
+        n, { 20: count(20), 21: count(21), 22: count(22), 23: count(23), 24: count(24) },
         fmtGold(total / n), fmtTimeLong(avgTime), fmtGold(total)
       );
 
@@ -3306,6 +3384,7 @@
           <td>${nf(h.fails, L)}</td>
           <td>${nf(h.downs, L)}</td>
           <td>${h.items ?? 1}</td>
+          <td>${h.steps === false ? tr.stratShortAll : tr.stratShortSteps}</td>
           <td>${fmtGold(c)}</td>
           <td>${fmtDate(h.date)}</td>
         </tr>`
@@ -3323,11 +3402,11 @@
     $("histCsv").onclick = () => {
       if (!autoHistory.length) return;
       const header = ["craft", "result", "time_seconds", "attempts", "formulas", "potions", "dyes",
-        "downgrades", "items_used", "stop_mode", "attempt_prices_silver", "cost_silver", "cost_gold", "date"];
+        "downgrades", "items_used", "stop_mode", "strategy", "attempt_prices_silver", "cost_silver", "cost_gold", "date"];
       const lines = autoHistory.map(h => {
         const c = histCost(h);
         return [h.n, h.level, h.actions * AUTO_ACTION_SEC, h.attempts, h.attempts, h.attempts, h.fails,
-          h.downs, h.items ?? 1, (h.stop ?? 22) === 23 ? "23-24" : "22-24", feeOf(h.lv), c, Math.round(c / 1000), new Date(h.date).toISOString()].join(",");
+          h.downs, h.items ?? 1, `stop+${h.stop ?? 22}`, h.steps === false ? "all" : "steps", feeOf(h.lv), c, Math.round(c / 1000), new Date(h.date).toISOString()].join(",");
       });
       downloadFile("forge-craft-history.csv", [header.join(","), ...lines].join("\n"), "text/csv;charset=utf-8;");
     };
@@ -3340,6 +3419,16 @@
         autoStart();
       }
     };
+
+    document.querySelectorAll("[data-autostrat]").forEach(b => {
+      b.onclick = () => {
+        if (autoTimer) return;
+        autoSteps = b.dataset.autostrat === "steps";
+        // un craft en pause ou terminé repart avec la nouvelle stratégie
+        auto = autoFresh();
+        renderAuto();
+      };
+    });
 
     document.querySelectorAll("[data-automode]").forEach(b => {
       b.onclick = () => {
@@ -3376,6 +3465,8 @@
      */
 
     let budResult = null;
+    let budMode = 22;
+    let budSteps = true;
 
     const budNum = id => {
       const v = parseFloat($(id).value);
@@ -3383,7 +3474,9 @@
     };
 
     // un seul craft : on enchaîne les items jusqu'à épuisement du budget
-    function budgetRun(budgetSilver) {
+    function budgetRun(budgetSilver, stop, useSteps) {
+
+      const DOWN = useSteps ? AUTO_DOWN : {};
 
       let money = budgetSilver;
       const items = [];
@@ -3395,9 +3488,12 @@
         const it = { attempts: 0, fails: 0, downs: 0, actions: 0, cost: 0 };
         let broke = false;
 
-        while (l < 22) {
+        while (l < stop) {
 
-          if (AUTO_DOWN[l]) {
+          // bloqué (+22 sans taux en mode +23/+24) : l'item reste un +22
+          if (chances[l] === undefined) { it.stuck = true; break; }
+
+          if (DOWN[l]) {
             if (money < D) { broke = true; break; }
             money -= D; it.cost += D; it.downs++; it.actions++; l--;
             continue;
@@ -3429,7 +3525,7 @@
 
     function budgetCalc() {
       const budget = budNum("budBudget") * 1000;
-      budResult = { budget, ...budgetRun(budget) };
+      budResult = { budget, stop: budMode, steps: budSteps, ...budgetRun(budget, budMode, budSteps) };
       renderBudget();
     }
 
@@ -3440,13 +3536,22 @@
 
       $("budTitle").textContent = tr.budTitle;
       $("budLblBudget").textContent = tr.budLblBudget;
-      $("budDesc").textContent = tr.budDesc;
+      $("budDesc").textContent = tr.budDesc(budMode);
+      $("budModeLabel").textContent = tr.modeLabel;
+      document.querySelectorAll("[data-budmode]").forEach(b => b.textContent = tr.modeNames[b.dataset.budmode]);
+      $("budStratInfo").innerHTML = budSteps ? tr.autoStrat(AUTO_STEPS) : tr.noStepsInfo;
+      document.querySelectorAll("[data-budstrat]").forEach(b => {
+        b.textContent = b.dataset.budstrat === "all" ? tr.stratAll : tr.stratSteps;
+        b.classList.toggle("active", (b.dataset.budstrat === "steps") === budSteps);
+      });
+      document.querySelectorAll("[data-budmode]").forEach(b =>
+        b.classList.toggle("active", Number(b.dataset.budmode) === budMode));
       $("budRun").textContent = budResult ? tr.budAgain : tr.budRun;
       ["bThN", "bThLevel", "bThAttempts", "bThDyes", "bThDowns", "bThTime", "bThCost"]
         .forEach(id => $(id).textContent = tr[id]);
 
       if (!budResult) {
-        ["bud22", "bud23", "bud24"].forEach(id => $(id).textContent = "—");
+        ["bud20", "bud21", "bud22", "bud23", "bud24"].forEach(id => $(id).textContent = "—");
         $("budMsg").textContent = tr.budIdle;
         $("budBody").innerHTML = "";
         return;
@@ -3454,7 +3559,7 @@
 
       const { items, partial, left, budget } = budResult;
 
-      [22, 23, 24].forEach(lvl => {
+      [20, 21, 22, 23, 24].forEach(lvl => {
         $("bud" + lvl).textContent = items.filter(x => x.level === lvl).length;
       });
 
@@ -3472,7 +3577,8 @@
         spent: fmtGold(budget - left),
         left: fmtGold(left),
         time: fmtTimeLong(totalActions * AUTO_ACTION_SEC),
-        partial: partial ? partial.level : null
+        partial: partial ? partial.level : null,
+        strat: budResult.steps ? tr.stratNameSteps : tr.stratNameAll
       });
 
       const row = (n, label, color, x) =>
@@ -3487,12 +3593,26 @@
         </tr>`;
 
       $("budBody").innerHTML =
-        items.map((x, i) => row(i + 1, "+" + x.level,
+        items.map((x, i) => row(i + 1, "+" + x.level + (x.stuck ? " " + tr.budStuck : ""),
           x.level === 24 ? "#f0cf75" : x.level === 23 ? "#63cf8f" : "#e2c37d", x)).join("") +
         (partial ? row("—", tr.budUnfinished(partial.level), "#998368", partial) : "");
     }
 
     $("budRun").onclick = budgetCalc;
+
+    document.querySelectorAll("[data-budstrat]").forEach(b => {
+      b.onclick = () => {
+        budSteps = b.dataset.budstrat === "steps";
+        renderBudget();
+      };
+    });
+
+    document.querySelectorAll("[data-budmode]").forEach(b => {
+      b.onclick = () => {
+        budMode = Number(b.dataset.budmode);
+        renderBudget();
+      };
+    });
 
 
     /*
